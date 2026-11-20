@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#6a5cff">
+<meta name="description" content="حدس بزن! — بازی گروهی حدس کلمه روی پیشانی، کاملاً فارسی">
+<title>حدس بزن! | بازی گروهی حدس کلمه</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#f4f6fb;--bg2:#e9edf7;--card:#ffffff;--tx:#182038;--tx2:#5a6480;--br:#e0e6f3;
+  --p1:#6a5cff;--p2:#9b6cff;--acc:#ff4d8d;--ok:#16a34a;--ok2:#4ade80;--bad:#ef4444;--bad2:#fb7185;--gold:#f59e0b;
+  --sh:0 10px 30px rgba(24,32,56,.10);
+}
+[data-theme="dark"]{
+  --bg:#0e1124;--bg2:#151a38;--card:#1a2044;--tx:#eef0ff;--tx2:#9aa3c7;--br:#2a3160;
+  --sh:0 10px 30px rgba(0,0,0,.45);
+}
+html,body{height:100%}
+body{
+  font-family:"Vazirmatn","IRANSansX","IRANSans","Segoe UI",Tahoma,sans-serif;
+  background:var(--bg);color:var(--tx);overflow:hidden;
+  -webkit-font-smoothing:antialiased;overscroll-behavior:none;touch-action:manipulation;
+}
+body::before,body::after{content:"";position:fixed;z-index:-1;border-radius:50%;filter:blur(90px);opacity:.35;pointer-events:none}
+body::before{width:340px;height:340px;background:#6a5cff;top:-90px;right:-90px;animation:float1 14s ease-in-out infinite}
+body::after{width:300px;height:300px;background:#ff4d8d;bottom:-80px;left:-80px;animation:float2 16s ease-in-out infinite}
+[data-theme="dark"] body::before,[data-theme="dark"] body::after{opacity:.16}
+@keyframes float1{0%,100%{transform:translate(0,0)}50%{transform:translate(-30px,40px)}}
+@keyframes float2{0%,100%{transform:translate(0,0)}50%{transform:translate(40px,-30px)}}
+#app{position:fixed;inset:0;overflow:hidden}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;overflow-y:auto;
+  padding:14px 16px calc(18px + env(safe-area-inset-bottom));}
+.screen.on{display:flex;animation:fadein .25s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media(min-width:700px){.screen{padding-left:max(16px,calc(50vw - 250px));padding-right:max(16px,calc(50vw - 250px))}}
+/* ---------- top bar ---------- */
+.tbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-shrink:0}
+.tbar .sp{flex:1}
+.tbtn{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:var(--card);
+  border:1px solid var(--br);color:var(--tx);cursor:pointer;font-size:19px;flex-shrink:0;transition:transform .15s}
+.tbtn:active{transform:scale(.92)}
+.tbtn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* ---------- typography ---------- */
+.logo{font-size:46px;font-weight:900;background:linear-gradient(135deg,var(--p1),var(--acc));
+  -webkit-background-clip:text;background-clip:text;color:transparent;line-height:1.2}
+.logo-sm{font-size:22px;font-weight:900}
+.slogan{color:var(--tx2);font-size:15px;font-weight:600;margin-top:6px}
+.sec{font-size:15px;font-weight:800;margin:16px 0 8px;display:flex;align-items:center;gap:8px}
+.sec .cnt{font-size:12px;color:var(--tx2);font-weight:700}
+/* ---------- buttons ---------- */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:16px 20px;border-radius:16px;
+  font-weight:800;font-size:17px;border:none;cursor:pointer;font-family:inherit;color:var(--tx);
+  transition:transform .15s,box-shadow .2s;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.btn:active{transform:scale(.96)}
+.btn:disabled{opacity:.5;pointer-events:none}
+.btn-p{background:linear-gradient(135deg,var(--p1),var(--acc));color:#fff;box-shadow:0 8px 22px rgba(106,92,255,.35)}
+.btn-g{background:var(--card);border:1.5px solid var(--br);box-shadow:var(--sh)}
+.btn-ok{background:linear-gradient(135deg,var(--ok),var(--ok2));color:#fff;box-shadow:0 8px 22px rgba(22,163,74,.35)}
+.btn-bad{background:linear-gradient(135deg,#f43f5e,var(--bad2));color:#fff;box-shadow:0 8px 22px rgba(239,68,68,.3)}
+.btn-sm{padding:11px 16px;font-size:14px;border-radius:13px;width:auto}
+.btn-lg{padding:20px;font-size:19px;border-radius:20px}
+/* ---------- cards & inputs ---------- */
+.card{background:var(--card);border:1px solid var(--br);border-radius:20px;padding:16px;box-shadow:var(--sh)}
+.inp{width:100%;padding:13px 15px;border-radius:14px;border:1.5px solid var(--br);background:var(--card);
+  color:var(--tx);font-size:16px;font-family:inherit;transition:border-color .2s}
+.inp:focus{outline:none;border-color:var(--p1)}
+.row{display:flex;gap:10px;align-items:center}
+/* ---------- chips ---------- */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:9px 13px;border-radius:999px;border:1.5px solid var(--br);background:var(--card);color:var(--tx);
+  font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
+.chip.on{background:linear-gradient(135deg,var(--p1),var(--acc));color:#fff;border-color:transparent}
+.chip .n{font-size:11px;opacity:.75;margin-inline-start:4px}
+/* ---------- avatar picker ---------- */
+.avgrid{display:flex;flex-wrap:wrap;gap:8px}
+.av{width:50px;height:50px;font-size:25px;display:grid;place-items:center;border-radius:16px;
+  border:2px solid var(--br);cursor:pointer;background:var(--card);transition:all .15s}
+.av.on{border-color:var(--p1);box-shadow:0 0 0 3px rgba(106,92,255,.25);transform:scale(1.05)}
+/* ---------- player list ---------- */
+.prow{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:var(--card);
+  border:1px solid var(--br);margin-bottom:8px;cursor:pointer}
+.prow .avsm{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:20px;background:var(--bg2);flex-shrink:0}
+.prow .nm{flex:1;font-weight:800;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prow .del{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;border:none;
+  background:transparent;color:var(--bad);font-size:18px;cursor:pointer;flex-shrink:0;font-family:inherit}
+.tb{padding:3px 9px;border-radius:8px;font-size:11.5px;font-weight:800;flex-shrink:0}
+.tb-a{background:#dbeafe;color:#1d4ed8}
+.tb-b{background:#fee2e2;color:#b91c1c}
+[data-theme="dark"] .tb-a{background:#1e3a8a55;color:#93c5fd}
+[data-theme="dark"] .tb-b{background:#7f1d1d55;color:#fca5a5}
+.crown{font-size:17px;flex-shrink:0}
+/* ---------- code entry ---------- */
+.codebox{display:flex;gap:7px;direction:ltr;justify-content:center}
+.cd{width:46px;height:58px;text-align:center;font-size:26px;font-weight:900;border-radius:14px;
+  border:1.5px solid var(--br);background:var(--card);color:var(--tx);font-family:inherit}
+.cd:focus{outline:none;border-color:var(--p1);box-shadow:0 0 0 3px rgba(106,92,255,.2)}
+.bigcode{font-size:40px;font-weight:900;letter-spacing:6px;direction:ltr;text-align:center;
+  background:linear-gradient(135deg,var(--p1),var(--acc));-webkit-background-clip:text;background-clip:text;color:transparent}
+/* ---------- timer ---------- */
+.tnum{font-size:44px;font-weight:900;text-align:center;direction:ltr}
+.tnum.hot{color:var(--bad);animation:pulse .5s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+.tbarline{height:10px;border-radius:999px;background:var(--br);overflow:hidden}
+.tbarfill{height:100%;background:linear-gradient(90deg,var(--ok),var(--gold),var(--bad));width:100%;transition:width .2s linear}
+/* ---------- word screen ---------- */
+#pw-stage{display:flex;flex-direction:column;height:100%;gap:12px;justify-content:space-between}
+body.forehead #pw-stage{position:fixed;top:50%;left:50%;width:100vh;height:100vw;
+  transform:translate(-50%,-50%) rotate(90deg);gap:18px;z-index:5}
+.wordcard{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  background:var(--card);border:1px solid var(--br);border-radius:24px;box-shadow:var(--sh);padding:14px;min-height:0}
+#pw-cat{font-size:15px;font-weight:800;color:var(--tx2);background:var(--bg2);padding:6px 14px;border-radius:999px}
+#pw-word{font-size:clamp(30px,9vh,68px);font-weight:900;text-align:center;line-height:1.25}
+.wordcard.pop{animation:pop .3s}
+@keyframes pop{0%{transform:scale(.94);opacity:.6}100%{transform:scale(1);opacity:1}}
+.wbtns{display:flex;gap:10px}
+.wbtns .btn{flex:1;padding:18px;font-size:16.5px}
+.wrow{display:flex;gap:10px;justify-content:center}
+#pw-hintline{font-size:12.5px;color:var(--tx2);text-align:center}
+#pw-flash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:9}
+#pw-flash.f-ok{background:rgba(34,197,94,.3);animation:fl .4s}
+#pw-flash.f-bad{background:rgba(239,68,68,.3);animation:fl .4s}
+@keyframes fl{0%{opacity:1}100%{opacity:0}}
+/* ---------- lists / summary ---------- */
+.wline{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:13px;background:var(--card);
+  border:1px solid var(--br);margin-bottom:7px;font-weight:700;font-size:14.5px}
+.wline .st{margin-inline-start:auto;font-weight:900;font-size:13px;padding:3px 10px;border-radius:999px}
+.wline.ok .st{background:#dcfce7;color:#15803d}
+.wline.no .st{background:#fee2e2;color:#b91c1c}
+[data-theme="dark"] .wline.ok .st{background:#052e16;color:#4ade80}
+[data-theme="dark"] .wline.no .st{background:#450a0a;color:#fca5a5}
+.scorerow{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:14px;background:var(--card);
+  border:1px solid var(--br);margin-bottom:8px}
+.scorerow .rk{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font-weight:900;font-size:14px;
+  background:var(--bg2);flex-shrink:0}
+.scorerow.first .rk{background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#fff}
+.scorerow .sc{margin-inline-start:auto;font-weight:900;font-size:17px;color:var(--p1)}
+/* ---------- podium ---------- */
+.pod{display:flex;align-items:flex-end;gap:8px;justify-content:center;margin:10px 0 4px}
+.pod .step{flex:1;max-width:120px;border-radius:16px;padding:12px 8px;text-align:center;background:var(--card);
+  border:1px solid var(--br);box-shadow:var(--sh)}
+.pod .step .avsm{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:22px;
+  background:var(--bg2);margin:0 auto 6px}
+.pod .step .pn{font-weight:800;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pod .step .ps{font-weight:900;color:var(--p1);font-size:17px}
+.pod .s1{height:150px;background:linear-gradient(180deg,rgba(245,158,11,.18),var(--card))}
+.pod .s2{height:126px}
+.pod .s3{height:110px}
+/* ---------- misc ---------- */
+.feed{font-size:13px;color:var(--tx2);text-align:center;min-height:18px;font-weight:600}
+.empty{color:var(--tx2);font-size:13.5px;text-align:center;padding:14px;font-weight:600}
+.note{font-size:12.5px;color:var(--tx2);line-height:1.9;font-weight:600}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.switch{position:relative;width:52px;height:30px;border-radius:999px;background:var(--br);cursor:pointer;
+  transition:background .2s;flex-shrink:0;border:none}
+.switch::after{content:"";position:absolute;top:3px;right:3px;width:24px;height:24px;border-radius:50%;
+  background:#fff;transition:transform .2s;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.switch.on{background:linear-gradient(135deg,var(--p1),var(--acc))}
+.switch.on::after{transform:translateX(-22px)}
+.divider{height:1px;background:var(--br);margin:14px 0}
+.modes{display:flex;flex-direction:column;gap:12px;margin-top:22px}
+.modecard{display:flex;align-items:center;gap:14px;padding:18px;border-radius:20px;background:var(--card);
+  border:1px solid var(--br);box-shadow:var(--sh);cursor:pointer;transition:transform .15s;width:100%;
+  text-align:right;font-family:inherit;color:var(--tx)}
+.modecard:active{transform:scale(.97)}
+.modecard .ic{width:54px;height:54px;border-radius:18px;display:grid;place-items:center;font-size:26px;flex-shrink:0}
+.modecard .ic.m1{background:linear-gradient(135deg,rgba(106,92,255,.18),rgba(255,77,141,.18))}
+.modecard .ic.m2{background:linear-gradient(135deg,rgba(34,197,94,.18),rgba(56,189,248,.18))}
+.modecard .mt{flex:1}
+.modecard .mt .t1{font-weight:900;font-size:16.5px}
+.modecard .mt .t2{font-size:12.5px;color:var(--tx2);font-weight:600;margin-top:3px;line-height:1.6}
+.modecard .ar{color:var(--tx2);font-size:20px;flex-shrink:0}
+/* ---------- modal ---------- */
+.modal{position:fixed;inset:0;background:rgba(8,10,28,.6);display:none;place-items:center;z-index:70;padding:20px;
+  backdrop-filter:blur(3px)}
+.modal.on{display:grid}
+.mbox{max-width:420px;width:100%;max-height:82vh;overflow-y:auto;background:var(--card);border-radius:22px;
+  padding:20px;border:1px solid var(--br);animation:pop .25s}
+/* ---------- toast ---------- */
+#toast{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--tx);color:var(--bg);padding:11px 20px;border-radius:14px;font-size:14px;font-weight:800;
+  z-index:99;opacity:0;transition:all .3s;pointer-events:none;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:80}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div id="toast"></div>
+<div id="app">
+
+<!-- ================= HOME ================= -->
+<section id="scr-home" class="screen on">
+  <div class="tbar">
+    <div class="sp"></div>
+    <button class="tbtn" id="btn-sound" title="صدا"><span id="ic-sound">🔊</span></button>
+    <button class="tbtn" id="btn-theme" title="تم"><span id="ic-theme">🌙</span></button>
+    <button class="tbtn" id="btn-help" title="راهنما"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.6 2.24c-.9.45-1.1 1-1.1 1.76"/><circle cx="12" cy="16.6" r=".6" fill="currentColor"/></svg></button>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;max-width:520px;width:100%;margin:0 auto">
+    <div style="text-align:center;margin-bottom:8px">
+      <div class="logo">حدس بزن!</div>
+      <div class="slogan">ببین چقدر دوستات رو می‌شناسی!</div>
+    </div>
+    <div class="modes">
+      <button class="modecard" id="btn-pass">
+        <div class="ic m1">📱</div>
+        <div class="mt">
+          <div class="t1">بازی تک‌گوشی (دور همی)</div>
+          <div class="t2">گوشی می‌چرخه دسته‌دسته؛ یکی حدس می‌زنه، بقیه توضیح می‌دن — بدون نیاز به اینترنت</div>
+        </div>
+        <div class="ar">‹</div>
+      </button>
+      <button class="modecard" id="btn-md">
+        <div class="ic m2">👥</div>
+        <div class="mt">
+          <div class="t1">بازی چندگوشی آنلاین</div>
+          <div class="t2">هر نفر با گوشی خودش؛ با کد ۶ رقمی وارد اتاق بشید (نیاز به اینترنت دارد)</div>
+        </div>
+        <div class="ar">‹</div>
+      </button>
+    </div>
+    <div class="note" style="text-align:center;margin-top:18px" id="home-note">ساخته‌شده برای پارتی و دورهمی — فقط همین یک فایل کافیه</div>
+  </div>
+</section>
+
+<!-- ================= PASS SETUP ================= -->
+<section id="scr-pass-setup" class="screen">
+  <div class="tbar">
+    <button class="tbtn" data-back="scr-home"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+    <div class="logo-sm">بازی تک‌گوشی</div>
+  </div>
+
+  <div class="sec">بازیکن‌ها <span class="cnt" id="ps-count">۰ نفر</span></div>
+  <div class="row" style="margin-bottom:10px">
+    <input class="inp" id="ps-name" placeholder="اسم بازیکن..." maxlength="14" autocomplete="off">
+    <button class="btn btn-p btn-sm" id="ps-add" style="padding:13px 18px">افزودن</button>
+  </div>
+  <div id="ps-players"></div>
+
+  <div class="divider"></div>
+  <div class="toggle"><span style="font-weight:800;font-size:15px">بازی تیمی (۲ تیم آبی و قرمز)</span>
+    <button class="switch" id="ps-teams" aria-label="تیمی"></button></div>
+  <div class="note">با فعال‌کردن این گزینه، امتیازها به‌جای فرد، برای تیم محاسبه می‌شود و نوبت‌ها بین دو تیم می‌چرخد.</div>
+
+  <div class="sec">زمان هر نوبت</div>
+  <div class="chips" id="ps-time">
+    <button class="chip" data-v="60">۶۰ ثانیه</button>
+    <button class="chip on" data-v="90">۹۰ ثانیه</button>
+    <button class="chip" data-v="120">۲ دقیقه</button>
+    <button class="chip" data-v="180">۳ دقیقه</button>
+  </div>
+
+  <div class="sec">تعداد نوبت هر نفر</div>
+  <div class="chips" id="ps-rounds">
+    <button class="chip" data-v="1">۱ نوبت</button>
+    <button class="chip on" data-v="2">۲ نوبت</button>
+    <button class="chip" data-v="3">۳ نوبت</button>
+  </div>
+
+  <div class="sec">مود پیشانی (چرخش صفحه برای پیشانی)</div>
+  <div class="toggle"><span style="font-weight:800;font-size:14px">کلمه برای دوستانتان روبرو می‌شود (گوشی روی پیشانی)</span>
+    <button class="switch on" id="ps-forehead" aria-label="پیشانی"></button></div>
+  <div class="toggle" style="margin-top:10px"><span style="font-weight:800;font-size:14px">حدس با تکان دادن گوشی (پیچ پایین = درست، پیچ بالا = رد)</span>
+    <button class="switch on" id="ps-tilt" aria-label="تکان"></button></div>
+
+  <div class="sec">دسته‌بندی‌ها <span class="cnt" id="ps-cats-info"></span></div>
+  <div class="chips" id="ps-cats"></div>
+
+  <div style="height:20px"></div>
+  <button class="btn btn-p btn-lg" id="ps-start">شروع بازی</button>
+</section>
+
+<!-- ================= PASS INTRO ================= -->
+<section id="scr-pass-intro" class="screen">
+  <div class="tbar"><div class="sp"></div><div class="logo-sm">حدس بزن!</div></div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:14px;text-align:center">
+    <div class="note" id="pi-round"></div>
+    <div style="font-size:22px;font-weight:800">نوبتِ</div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="avsm" id="pi-av" style="width:64px;height:64px;font-size:32px;border-radius:20px;display:grid;place-items:center;background:var(--bg2)"></div>
+      <div style="font-size:34px;font-weight:900" id="pi-name"></div>
+    </div>
+    <div id="pi-team" style="margin-top:-4px"></div>
+    <div class="note" style="max-width:330px;line-height:2" id="pi-desc">
+      گوشی را روی پیشانی بگذار (صفحه رو به دوستانت)؛ آن‌ها کلمه را می‌بینند و توضیح می‌دهند،
+      تو حدس بزن! برای «درست» گوشی را به سمت زمین بچرخان، برای «رد» به سمت آسمان.
+    </div>
+    <div style="height:10px"></div>
+    <button class="btn btn-p btn-lg" id="pi-start" style="max-width:340px">آماده‌ام، شروع!</button>
+  </div>
+</section>
+
+<!-- ================= PASS WORD ================= -->
+<section id="scr-pass-word" class="screen">
+  <div id="pw-flash"></div>
+  <div id="pw-stage">
+    <div>
+      <div class="tnum" id="pw-timer-num">۹۰</div>
+      <div class="tbarline"><div class="tbarfill" id="pw-timer-bar"></div></div>
+    </div>
+    <div class="wordcard" id="pw-card">
+      <div id="pw-cat"></div>
+      <div id="pw-word"></div>
+    </div>
+    <div id="pw-hintline"></div>
+    <div class="wbtns">
+      <button class="btn btn-bad" id="pw-btn-skip">رد کردن ✗</button>
+      <button class="btn btn-ok" id="pw-btn-ok">درست حدس زدم ✓</button>
+    </div>
+    <div class="wrow">
+      <button class="btn btn-g btn-sm" id="pw-btn-end">پایان نوبت</button>
+      <button class="btn btn-g btn-sm" id="pw-pause">مکث</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PASS SUMMARY ================= -->
+<section id="scr-pass-sum" class="screen">
+  <div class="tbar">
+    <div class="logo-sm" id="psu-title">پایان نوبت</div>
+    <div class="sp"></div>
+    <div class="note" id="psu-sub"></div>
+  </div>
+  <div class="card" style="padding:12px;margin-bottom:12px">
+    <div id="psu-list"></div>
+  </div>
+  <div class="sec">جدول امتیازها</div>
+  <div id="psu-scores"></div>
+  <div style="flex:1"></div>
+  <button class="btn btn-p btn-lg" id="psu-next">بعدی</button>
+</section>
+
+<!-- ================= PASS FINAL ================= -->
+<section id="scr-pass-final" class="screen">
+  <div class="tbar"><div class="sp"></div><div class="logo-sm">پایان بازی</div></div>
+  <div style="text-align:center;margin-top:6px">
+    <div style="font-size:46px">🏆</div>
+    <div style="font-size:22px;font-weight:900" id="pf-title"></div>
+  </div>
+  <div class="pod" id="pf-podium"></div>
+  <div class="sec">همه نتایج</div>
+  <div id="pf-list"></div>
+  <div style="flex:1"></div>
+  <div class="row">
+    <button class="btn btn-g" id="pf-home">خانه</button>
+    <button class="btn btn-p" id="pf-again">بازی دوباره</button>
+  </div>
+</section>
+
+<!-- ================= MD HOME ================= -->
+<section id="scr-md-home" class="screen">
+  <div class="tbar">
+    <button class="tbtn" data-back="scr-home"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+    <div class="logo-sm">بازی چندگوشی</div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:12px;max-width:520px;width:100%;margin:0 auto">
+    <button class="btn btn-p btn-lg" id="md-create">ساخت اتاق جدید (میزبان)</button>
+    <button class="btn btn-g" id="md-join">ورود با کد اتاق</button>
+    <button class="btn btn-g" id="md-resume-h" style="display:none">ادامه میزبانی قبلی</button>
+    <button class="btn btn-g" id="md-resume-g" style="display:none">ادامه بازی قبلی</button>
+    <div class="card note" style="margin-top:8px;line-height:2">
+      در این حالت هر نفر با گوشی خودش بازی می‌کند و همه باید به اینترنت وصل باشند.
+      گوشی میزبانِ اتاق نقش «داور» را دارد؛ اگر صفحه‌ی میزبان بسته شود بازی تمام می‌شود.
+      برای هماهنگ‌سازی بازیکن‌ها از یک سرویس پیام‌رسان عمومی و رایگان (MQTT) استفاده می‌شود.
+    </div>
+  </div>
+</section>
+
+<!-- ================= MD CREATE ================= -->
+<section id="scr-md-create" class="screen">
+  <div class="tbar">
+    <button class="tbtn" data-back="scr-md-home"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+    <div class="logo-sm">ساخت اتاق</div>
+  </div>
+  <div class="sec">اسم تو</div>
+  <input class="inp" id="mc-name" placeholder="مثلاً: علی" maxlength="14" autocomplete="off">
+  <div class="sec">آواتار</div>
+  <div class="avgrid" id="mc-av"></div>
+  <div class="sec">زمان هر نوبت</div>
+  <div class="chips" id="mc-time">
+    <button class="chip" data-v="60">۶۰ ثانیه</button>
+    <button class="chip on" data-v="90">۹۰ ثانیه</button>
+    <button class="chip" data-v="120">۲ دقیقه</button>
+    <button class="chip" data-v="180">۳ دقیقه</button>
+  </div>
+  <div class="sec">تعداد نوبت هر نفر</div>
+  <div class="chips" id="mc-rounds">
+    <button class="chip" data-v="1">۱ نوبت</button>
+    <button class="chip on" data-v="2">۲ نوبت</button>
+    <button class="chip" data-v="3">۳ نوبت</button>
+  </div>
+  <div class="toggle" style="margin:16px 0"><span style="font-weight:800;font-size:14.5px">بازی تیمی (۲ تیم)</span>
+    <button class="switch" id="mc-teams"></button></div>
+  <div class="sec">دسته‌بندی‌ها <span class="cnt" id="mc-cats-info"></span></div>
+  <div class="chips" id="mc-cats"></div>
+  <div style="height:18px"></div>
+  <button class="btn btn-p btn-lg" id="mc-go">ساخت اتاق و اتصال</button>
+  <div class="note" id="mc-status" style="text-align:center;margin-top:10px"></div>
+</section>
+
+<!-- ================= MD JOIN ================= -->
+<section id="scr-md-join" class="screen">
+  <div class="tbar">
+    <button class="tbtn" data-back="scr-md-home"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+    <div class="logo-sm">ورود به اتاق</div>
+  </div>
+  <div class="sec">کد ۶ رقمی اتاق</div>
+  <div class="codebox" id="mj-code">
+    <input class="cd" inputmode="numeric" maxlength="1" autocomplete="off">
+    <input class="cd" inputmode="numeric" maxlength="1" autocomplete="off">
+    <input class="cd" inputmode="numeric" maxlength="1" autocomplete="off">
+    <input class="cd" inputmode="numeric" maxlength="1" autocomplete="off">
+    <input class="cd" inputmode="numeric" maxlength="1" autocomplete="off">
+    <input class="cd" inputmode="numeric" maxlength="1" autocomplete="off">
+  </div>
+  <div class="sec">اسم تو</div>
+  <input class="inp" id="mj-name" placeholder="مثلاً: سارا" maxlength="14" autocomplete="off">
+  <div class="sec">آواتار</div>
+  <div class="avgrid" id="mj-av"></div>
+  <div style="height:18px"></div>
+  <button class="btn btn-p btn-lg" id="mj-go">ورود به اتاق</button>
+  <div class="note" id="mj-status" style="text-align:center;margin-top:10px"></div>
+</section>
+
+<!-- ================= MD LOBBY ================= -->
+<section id="scr-md-lobby" class="screen">
+  <div class="tbar">
+    <button class="tbtn" id="ml-back"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+    <div class="logo-sm">اتاق بازی</div>
+  </div>
+  <div class="card" style="text-align:center;margin-bottom:12px">
+    <div class="note">کد اتاق را به دوستانت بده</div>
+    <div class="bigcode" id="ml-code">------</div>
+    <div class="row" style="justify-content:center;margin-top:10px">
+      <button class="btn btn-g btn-sm" id="ml-copy">کپی کد</button>
+      <button class="btn btn-g btn-sm" id="ml-share">اشتراک لینک</button>
+    </div>
+  </div>
+  <div class="sec">بازیکن‌ها <span class="cnt" id="ml-count"></span></div>
+  <div id="ml-players"></div>
+  <div class="card note" style="margin-top:6px" id="ml-settings"></div>
+  <div style="flex:1"></div>
+  <button class="btn btn-g" id="ml-ready" style="display:none">آماده‌ام!</button>
+  <button class="btn btn-p btn-lg" id="ml-start" style="display:none">شروع بازی</button>
+  <button class="btn btn-bad" id="ml-close" style="display:none;margin-top:10px">بستن اتاق</button>
+  <div style="height:8px"></div>
+</section>
+
+<!-- ================= MD GAME ================= -->
+<section id="scr-md-game" class="screen">
+  <div class="tbar">
+    <button class="tbtn" id="mg-exit"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+    <div style="font-weight:800" id="mg-phase-title">اتاق</div>
+    <div class="sp"></div>
+    <div class="note" id="mg-turn-info"></div>
+  </div>
+  <div id="mg-intro" style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;text-align:center">
+    <div class="note" id="mg-intro-sub"></div>
+    <div style="font-size:20px;font-weight:800">نوبتِ</div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="avsm" id="mg-intro-av" style="width:60px;height:60px;font-size:30px;border-radius:18px;display:grid;place-items:center;background:var(--bg2)"></div>
+      <div style="font-size:32px;font-weight:900" id="mg-intro-name"></div>
+    </div>
+    <div class="note">۳ ثانیه تا شروع...</div>
+  </div>
+  <div id="mg-word-panel" style="flex:1;display:none;flex-direction:column;gap:12px">
+    <div>
+      <div class="tnum" id="mg-timer-num">۹۰</div>
+      <div class="tbarline"><div class="tbarfill" id="mg-timer-bar"></div></div>
+    </div>
+    <div class="card" id="mg-hintcard" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">
+      <div class="note" id="mg-hintline"></div>
+      <div id="mg-cat" style="font-size:14px;font-weight:800;color:var(--tx2);background:var(--bg2);padding:6px 14px;border-radius:999px"></div>
+      <div id="mg-word" style="font-size:clamp(28px,8vh,56px);font-weight:900;text-align:center;line-height:1.3"></div>
+      <div class="feed" id="mg-feed"></div>
+    </div>
+    <div id="mg-guesser-btns" class="wbtns" style="display:none">
+      <button class="btn btn-bad" id="mg-btn-skip">رد کردن ✗</button>
+      <button class="btn btn-ok" id="mg-btn-ok">درست حدس زدم ✓</button>
+    </div>
+    <button class="btn btn-g" id="mg-btn-end" style="display:none">پایان نوبت</button>
+  </div>
+  <div id="mg-summary" style="flex:1;display:none;flex-direction:column">
+    <div class="sec" id="mg-sum-title">نتیجه نوبت</div>
+    <div class="card" style="padding:12px"><div id="mg-sum-list"></div></div>
+    <div class="sec">جدول امتیازها</div>
+    <div id="mg-scores"></div>
+  </div>
+</section>
+
+<!-- ================= MD FINAL ================= -->
+<section id="scr-md-final" class="screen">
+  <div class="tbar"><div class="sp"></div><div class="logo-sm">پایان بازی</div></div>
+  <div style="text-align:center;margin-top:6px">
+    <div style="font-size:46px">🏆</div>
+    <div style="font-size:22px;font-weight:900" id="mf-title"></div>
+  </div>
+  <div class="pod" id="mf-podium"></div>
+  <div class="sec">همه نتایج</div>
+  <div id="mf-list"></div>
+  <div style="flex:1"></div>
+  <button class="btn btn-g" id="mf-home">خانه</button>
+</section>
+
+</div><!-- /app -->
+
+<!-- ================= MODALS ================= -->
+<div class="modal" id="modal-help">
+  <div class="mbox">
+    <div class="logo-sm" style="margin-bottom:10px">چطور بازی کنیم؟</div>
+    <div class="note" style="line-height:2.1">
+      <b>حالت تک‌گوشی (دور همی):</b> اسم‌ها را وارد کنید. در نوبت هر نفر، گوشی را روی پیشانی‌اش بگذارید
+      (صفحه رو به بقیه). دوستان کلمه را می‌بینند و توضیح می‌دهند؛ او حدس می‌زند.
+      «درست» یعنی گوشی را به سمت زمین بچرخاند، «رد» یعنی به سمت آسمان. بعد از پایان زمان، نوبت نفر بعدی است.<br><br>
+      <b>حالت چندگوشی آنلاین:</b> میزبان اتاق می‌سازد و کد ۶ رقمی را با دوستان به اشتراک می‌گذارد.
+      بقیه با کد وارد می‌شوند. در هر نوبت یک نفر حدس‌زننده است و کلمه فقط روی گوشی بقیه نمایش داده می‌شود؛
+      حدس‌زننده هرگز کلمه را نمی‌بیند.<br><br>
+      <b>امتیاز:</b> هر حدس درست ۱ امتیاز، کلمه رد شده ۰ امتیاز. در حالت تیمی، امتیاز به تیم حدس‌زننده اضافه می‌شود.
+    </div>
+    <button class="btn btn-p" id="help-close" style="margin-top:16px">فهمیدم!</button>
+  </div>
+</div>
+
+<div class="modal" id="modal-pause">
+  <div class="mbox" style="text-align:center">
+    <div class="logo-sm" style="margin-bottom:14px">بازی متوقف شد</div>
+    <div class="row" style="flex-direction:column;gap:10px">
+      <button class="btn btn-p" id="mp-resume">ادامه بازی</button>
+      <button class="btn btn-bad" id="mp-quit">پایان بازی</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal-confirm">
+  <div class="mbox" style="text-align:center">
+    <div style="font-weight:800;font-size:16px;margin-bottom:6px" id="mcx-title"></div>
+    <div class="note" id="mcx-text" style="margin-bottom:14px"></div>
+    <div class="row" style="gap:10px">
+      <button class="btn btn-g" id="mcx-no">نه</button>
+      <button class="btn btn-bad" id="mcx-yes">بله</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   حدس بزن! — تک‌فایل، بدون سرور، آماده گیت‌هاب پیجز
+   حالت ۱: تک‌گوشی (کاملاً آفلاین)  |  حالت ۲: چندگوشی (MQTT عمومی)
+   ============================================================ */
+
+/* ---------- helpers ---------- */
+const $=i=>document.getElementById(i);
+const on=(e,v,f)=>e.addEventListener(v,f);
+const $$=s=>document.querySelectorAll(s);
+const faD=n=>String(n).replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]);
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function uid(){return 'u'+Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);}
+function rndCode(){let c='';for(let i=0;i<6;i++)c+=Math.floor(Math.random()*10);return c;}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function show(id){$$('.screen').forEach(s=>s.classList.toggle('on',s.id===id));window.scrollTo(0,0);}
+let toastT=null;
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2400);}
+function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k));localStorage.setItem(k,JSON.stringify(v));}catch(e){return null;}}
+function del(k){try{localStorage.removeItem(k);}catch(e){}}
+
+/* ---------- theme & sound toggles ---------- */
+function setTheme(t){document.documentElement.dataset.theme=t;store('hbz_theme',t);$('ic-theme').textContent=t==='dark'?'☀️':'🌙';}
+function setSnd(v){Snd.on=v;store('hbz_snd',v);$('ic-sound').textContent=v?'🔊':'🔇';}
+
+/* ---------- sound (WebAudio synth — بدون فایل صوتی) ---------- */
+const Snd={ctx:null,on:true,
+  ac(){if(!this.ctx){try{this.ctx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}
+    if(this.ctx&&this.ctx.state==='suspended')this.ctx.resume();return this.ctx;},
+  tone(f,d,t,v,w,slide){t=t||'sine';v=v===undefined?.16:v;w=w||0;
+    const c=this.ac();if(!c||!this.on)return;
+    const o=c.createOscillator(),g=c.createGain();o.type=t;
+    o.frequency.setValueAtTime(f,c.currentTime+w);
+    if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(40,slide),c.currentTime+w+d);
+    g.gain.setValueAtTime(v,c.currentTime+w);
+    g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+w+d);
+    o.connect(g);g.connect(c.destination);
+    o.start(c.currentTime+w);o.stop(c.currentTime+w+d+.05);},
+  tap(){this.tone(620,.06,'triangle',.1);},
+  correct(){this.tone(523,.12,'triangle',.2);this.tone(659,.12,'triangle',.2,.09);this.tone(784,.22,'triangle',.2,.18);},
+  skip(){this.tone(220,.28,'sawtooth',.13,0,110);},
+  tick(){this.tone(950,.045,'square',.07);},
+  timeup(){this.tone(440,.3,'sawtooth',.18,0,220);this.tone(330,.45,'sawtooth',.16,.28,110);},
+  win(){[523,659,784,1046,784,1046,1318].forEach((f,i)=>this.tone(f,.18,'triangle',.18,i*.13));},
+  join(){this.tone(700,.08,'triangle',.14);this.tone(920,.1,'triangle',.14,.08);},
+  pop(){this.tone(880,.07,'triangle',.12);}
+};
+
+/* ---------- confetti (بدون کتابخانه) ---------- */
+const FX={cv:null,cx:null,ps:[],run:false,
+  init(){this.cv=$('fx');this.cx=this.cv.getContext('2d');
+    const r=()=>{this.cv.width=innerWidth;this.cv.height=innerHeight;};
+    r();addEventListener('resize',r);},
+  burst(n,cols){n=n||130;
+    cols=cols||['#6a5cff','#ff4d8d','#22c55e','#f59e0b','#38bdf8','#e879f9'];
+    for(let i=0;i<n;i++)this.ps.push({x:innerWidth/2+(Math.random()-.5)*innerWidth*.6,
+      y:innerHeight*.22+Math.random()*70,vx:(Math.random()-.5)*7.5,vy:Math.random()*-9-2,
+      g:.25+Math.random()*.16,s:5+Math.random()*6,r:Math.random()*Math.PI,vr:(Math.random()-.5)*.3,
+      c:cols[i%cols.length],l:85+Math.random()*55});
+    if(!this.run){this.run=true;this.loop();}},
+  loop(){const cx=this.cx,cv=this.cv;cx.clearRect(0,0,cv.width,cv.height);
+    this.ps=this.ps.filter(p=>p.l-->0&&p.y<cv.height+40);
+    for(const p of this.ps){p.vy+=p.g;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;
+      cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;
+      cx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.62);cx.restore();}
+    if(this.ps.length)requestAnimationFrame(()=>this.loop());
+    else{this.run=false;cx.clearRect(0,0,cv.width,cv.height);}}
+};
+
+/* ---------- آواتارها ---------- */
+const AVATARS=['🦁','🐯','🐼','🦊','🐸','🐵','🦄','🐙','🦖','🐧','🐨','🦉'];
+function avPicker(containerId,onPick){const box=$(containerId);box.innerHTML='';let sel=AVATARS[0];
+  AVATARS.forEach(a=>{const b=document.createElement('button');b.className='av';b.textContent=a;
+    b.onclick=()=>{sel=a;box.querySelectorAll('.av').forEach(x=>x.classList.remove('on'));b.classList.add('on');Snd.tap();
+      if(onPick)onPick(a);};
+    box.appendChild(b);});
+  box.firstChild.classList.add('on');
+  return()=>sel;}
+function chipGroup(containerId,def){const box=$(containerId);
+  box.addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;
+    box.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');Snd.tap();});
+  return()=>{const onEl=box.querySelector('.chip.on');return onEl?parseInt(onEl.dataset.v,10):def;};}
+function confirmBox(title,text,onYes){$('mcx-title').textContent=title;$('mcx-text').textContent=text;
+  $('modal-confirm').classList.add('on');
+  const done=()=>{$('modal-confirm').classList.remove('on');$('mcx-yes').onclick=null;$('mcx-no').onclick=null;};
+  $('mcx-yes').onclick=()=>{done();onYes();};$('mcx-no').onclick=done;}
+
+/* ============================================================
+   بانک کلمات — ۱۵ دسته، همه واقعی
+   ============================================================ */
+const CATS=[
+"حیوانات","غذاها","ستاره‌های فوتبال","چهره‌های مشهور","فیلم و سریال","شخصیت‌های کارتون",
+"مشاغل","وسایل خانه","وسیله نقلیه","مکان‌ها","ورزش‌ها","میوه‌ها","اشیا و لوازم شخصی","کلمات سخت","کلمات خنده‌دار"];
+const WORDS={
+"حیوانات":["شیر","ببر","پلنگ","یوزپلنگ","جاگوار","خرس","خرس قطبی","گربه","سگ","اسب","گورخر","زرافه","فیل","کرگدن","اورانگوتان","میمون","گوریل","شامپانزه","کانگورو","کوآلا","پاندا","دلفین","نهنگ","کوسه","هشت‌پا","اختاپوس","خرچنگ","میگو","قورباغه","وزغ","لاک‌پشت","تمساح","مار","افعی","عقرب","عنکبوت","مورچه","زنبور عسل","پروانه","کبوتر","گنجشک","عقاب","جغد","طوطی","قناری","خروس","اردک","غاز","بوقلمون","پنگوئن","شتر","شترمرغ","الاغ","گوزن","آهو","روباه","گرگ","خرگوش","موش","سنجاب","خفاش","فک"],
+"غذاها":["چلوکباب","کباب کوبیده","جوجه‌کباب","قورمه‌سبزی","قیمه","فسنجان","آبگوشت","دیزی","ته‌چین","کوفته","کوکو سبزی","املت","آش رشته","حلیم","عدسی","سوپ جو","ماکارونی","لازانیا","پیتزا","برگر","هات‌داگ","ناگت","مرغ سوخاری","استیک","خورشت بامیه","کتلت","سیب‌زمینی سرخ‌کرده","برنج","زرشک‌پلو","سبزی‌پلو","باقالی‌پلو","عدس‌پلو","سالاد اولویه","سالاد شیرازی","ماست و خیار","دوغ","کشک","پنیر","کره","عسل","مربا","نان سنگک","نان بربری","لواش","سوهان","گز","پشمک","باقلوا","زولبیا و بامیه","نوقا","آبنبات","شکلات","بیسکویت","کیک شکلاتی","دونات","بستنی","شله‌زرد","حلوا","حلوا ارده","شیرینی نخودچی"],
+"ستاره‌های فوتبال":["لیونل مسی","کریستیانو رونالدو","نیمار","کیلیان امباپه","محمد صلاح","ارلینگ هالند","رابرت لواندوفسکی","لوکا مودریچ","تونی کروس","سرجیو راموس","ایکر کاسیاس","آندرس اینیستا","ژاوی","رونالدینیو","کاکا","زلاتان ابراهیموویچ","دیوید بکهام","وین رونی","استیون جرارد","فرانک لمپارد","دیگو مارادونا","پله","یوهان کرویف","فرانتس بکن‌باور","زین‌الدین زیدان","میشل پلاتینی","روبرتو باجو","پائولو مالدینی","آندره‌آ پییرلو","جیانلوئیجی بوفون","فرانچسکو توتی","تی‌یری آنری","علی دایی","علی کریمی","مهدی مهدوی‌کیا","جواد نکونام","آندرانیک تیموریان","وحید هاشمیان","کریم انصاری‌فرد","سردار آذمون","مهدی طارمی","علیرضا بیرانوند","الکس فرگوسن","پپ گواردیولا","کارلو آنچلوتی","ژوزه مورینیو","سون هیونگ‌مین","هری کین","کوین دی‌بروینه","جرارد پیکه","مارکو رویس","تیاگو سیلوا"],
+"چهره‌های مشهور":["چارلی چاپلین","لئوناردو دی‌کاپریو","براد پیت","آنجلینا جولی","جانی دپ","اسکارلت جوهانسون","تام کروز","ویل اسمیت","دواین جانسون","کیانو ریوز","مورگان فریمن","جیم کری","جنیفر لارنس","امما واتسون","دنیل رادکلیف","تیلور سوئیفت","مایکل جکسون","بیونسه","ریهانا","اد شیرن","امینم","جاستین بیبر","لیدی گاگا","شاکیرا","جنیفر لوپز","بریتنی اسپیرز","چارلی پوث","بیلی آیلیش","دوا لیپا","آریانا گرانده","محسن چاوشی","محمد علیزاده","پویا بیاتی","بهنام بانی","آرش","سیاوش شمس","محمدرضا شجریان","گوگوش","هایده","ابی","داریوش","مرتضی پاشایی","شهاب حسینی","پرویز پرستویی","اکبر عبدی","رضا عطاران","مهدی هاشمی","پولاد کیمیایی","پریناز ایزدیار","شهرام صولتی","ستار","سیاوش قمیشی"],
+"فیلم و سریال":["تیتانیک","آواتار","جنگ ستاره‌ها","هری پاتر","ارباب حلقه‌ها","ماتریکس","شوالیه تاریکی","اینسپشن","بین‌ستاره‌ای","گلادیاتور","جدایی نادر از سیمین","فروشنده","درباره الی","اخراجی‌ها","چ","قهرمان","بازی تاج و تخت","برکینگ بد","فرندز","شرلوک","استرنجر تینگز","وانداویژن","لوکی","مانداولورین","چرنوبیل","دکتر هاوس","خانه کاغذی","اسکوئید گیم","مرد عنکبوتی","بتمن","جومانجی","پارک ژوراسیک","ترمیناتور","رامبو","جیمز باند","جان‌ویک","سریع و خشمگین","مأموریت غیرممکن","دزدان دریایی کارائیب","مردان سیاه‌پوش","ایکس من","انتقام‌جویان","لالالند","انیمیشن بالا","شهرزاد","پایتخت","کمانگیر","زخم کاری","دراکولا","فلش","مرد آهنی","پدرخوانده"],
+"شخصیت‌های کارتون":["تام و جری","میکی موس","دونالد داک","بامبی","سیندرلا","سفیدبرفی و هفت کوتوله","زیبای خوابیده","راپانزل","علاءالدین","شیرشاه","سیمبا","داستان نیمو","داستان اسباب‌بازی","کونگ‌فو پاندا","شرک","بتمن","سوپرمن","اسپایدرمن","آیرون‌من","هالک","کاپیتان آمریکا","ثور","پیکاچو","ناروتو","باب اسفنجی","دورا","جیمی نوترون","جانی براوو","دکستر","دختران ابرقهرمان","کلاه قرمزی","عروسک پولیشی","فکلی","گارفیلد","باگز بانی","توئیتی","پلنگ صورتی","گوژپشت نتردام","بن‌تن","اسکوبی دو","سندباد","وودی وودپیکر","پینوکیو","پیتر پن","الیس در سرزمین عجیب","شرکت هیولاها","مگامایند","رالف خرابکار","یخ‌زده (فروزن)","شازده کوچولو","پسر شجاع","لوک خوش‌شانس"],
+"مشاغل":["دکتر","پرستار","دندان‌پزشک","داروساز","معلم","استاد","مهندس","معمار","برق‌کار","لوله‌کش","نجار","آهنگر","خلبان","مهماندار","سرباز","افسر","آتش‌نشان","پلیس","قاضی","وکیل","کارآگاه","روزنامه‌نگار","خبرنگار","عکاس","نقاش","مجسمه‌ساز","نویسنده","شاعر","مترجم","خواننده","آهنگساز","نوازنده","رقصنده","بازیگر","کارگردان","فیلم‌بردار","مجری","صداپیشه","آشپز","قناد","گل‌فروش","میوه‌فروش","نانوا","قصاب","ماهی‌گیر","کشاورز","باغبان","چوپان","آرایشگر","خیاط","کفاش","ساعت‌ساز","طلافروش","کتابدار","صراف","مدل"],
+"وسایل خانه":["یخچال","فریزر","ماشین لباسشویی","ماشین ظرفشویی","اجاق گاز","فر","مایکروویو","سماور","کتری","قوری","فنجان","استکان","نعلبکی","بشقاب","قاشق","چنگال","چاقو","کفگیر","ملاقه","تابه","قابلمه","دیگ","سفره","مبل","صندلی","میز","تخت","بالشت","تشک","پتو","لحاف","ملحفه","پرده","فرش","گلیم","موکت","آینه","کمد","کشو","چراغ","آباژور","جاروبرقی","جارو","سطل آشغال","بخاری","کولر","پنکه","شومینه","آبگرمکن","رخت‌آویز","اتو","وان حمام","روشویی","کابینت","زنگ درب"],
+"وسیله نقلیه":["دوچرخه","موتورسیکلت","اسکوتر","ماشین","سدان","شاسی‌بلند","ون","مینی‌بوس","اتوبوس","کامیون","تریلی","ماشین آتش‌نشانی","آمبولانس","تاکسی","قطار","مترو","تراموا","کشتی","قایق","لنج","زیردریایی","قایق بادی","جت‌اسکی","هواپیما","جت","هلیکوپتر","گلایدر","بالن","فضاپیما","کالسکه","گاری","سورتمه","ماشین فرمول یک","ماشین پلیس","برف‌روب","جرثقیل","لودر","بیل مکانیکی","تراکتور","کمباین","وانت","چهارچرخه","هاوربرد","اسنوموبیل","پاراگلایدر","اتوبوس دوطبقه","قطار سریع‌السیر","کامیونت","ارابه","درشکه","کاتاماران","قایق موتوری"],
+"مکان‌ها":["مدرسه","دانشگاه","کتابخانه","بیمارستان","داروخانه","کلینیک","آزمایشگاه","بانک","صرافی","بازار","پاساژ","فروشگاه","سوپرمارکت","کافه","رستوران","فست‌فود","هتل","مهمان‌پذیر","پارک","باغ وحش","شهربازی","استخر","ورزشگاه","سینما","تئاتر","موزه","گالری","حرم","مسجد","کلیسا","فرودگاه","ایستگاه قطار","ترمینال","پمپ بنزین","تعمیرگاه","کارخانه","انبار","مزرعه","مرغداری","دادگاه","شهرداری","اداره پست","کلانتری","آتش‌نشانی","زندان","پارک آبی","اسکله","بندر","ساحل","جزیره","جنگل","کویر","غار","آب‌انبار"],
+"ورزش‌ها":["فوتبال","فوتسال","بسکتبال","والیبال","هندبال","تنیس","تنیس روی میز","بدمینتون","اسکواش","گلف","بیسبال","هاکی","کشتی","بوکس","کاراته","تکواندو","جودو","کونگ‌فو","ووشو","شنا","شیرجه","واترپلو","قایق‌رانی","کایاک","دوچرخه‌سواری","دو","ماراتن","پرش ارتفاع","پرش طول","وزنه‌برداری","ژیمناستیک","پارکور","اسکیت","اسکیت‌برد","اسکی","اسنوبورد","کوه‌نوردی","صخره‌نوردی","شطرنج","تیراندازی","تیر و کمان","شمشیربازی","اسلالوم","پرش با نیزه","پرتاب دیسک","پرتاب نیزه","تریاتلون","سورف","ویندسرف","کراس فیت","ایروبیک","یوگا","پاتیناژ","دو و میدانی"],
+"میوه‌ها":["سیب","پرتقال","نارنگی","لیمو","لیموشیرین","گریپ‌فروت","نارگیل","انار","انگور","هندوانه","طالبی","خربزه","آلو","زردآلو","گیلاس","آلبالو","توت","توت‌فرنگی","به","خرما","انجیر","زیتون","آووکادو","موز","کیوی","آناناس","مانگو","پاپایا","گوآوا","لیچی","میوه اژدها","شلیل","هلو","گوجه سبز","تمرهندی","سنجد","پسته","بادام","فندق","گردو","بادام‌هندی","کشمش","برگه زردآلو","زرشک","توت شیری","خیار","کدوحلوایی","بهارنارنج","شاهبلوط","خرمالو","لیمو عمانی","چغاله بادام","آلوی بخارا"],
+"اشیا و لوازم شخصی":["گوشی موبایل","تلفن","لپ‌تاپ","تبلت","هدفون","هندزفری","ساعت مچی","عینک","عینک آفتابی","کیف","کوله‌پشتی","چمدان","کلید","کیف پول","کارت بانکی","عطر","ادکلن","رژ لب","مسواک","خمیردندان","نخ دندان","شامپو","صابون","لیف","حوله","سشوار","برس","شانه","تیغ","ریش‌تراش","لاک ناخن","مداد","خودکار","کاغذ","دفتر","کتاب","مجله","خط‌کش","پاک‌کن","قیچی","چسب","گیره کاغذ","کبریت","فندک","شمع","چراغ‌قوه","باتری","شارژر","کابل","پریز برق","کلید برق","پازل","بازی فکری","ساک دستی","آبمیوه‌گیری"],
+"کلمات سخت":["فلسفه","متافیزیک","منطق","نسبیت","گرانش","مغناطیس","الکتریسیته","فتوسنتز","ژن","آنزیم","دی‌ان‌ای","کوانتوم","انتروپی","هوش مصنوعی","الگوریتم","رمزنگاری","نانوتکنولوژی","بلاکچین","دموکراسی","دیکتاتوری","انقلاب","بوروکراسی","تورم","دیپلماسی","مذاکره","تحریم","سانسور","اگزیستانسیالیسم","نیهیلیسم","پارادوکس","عذاب وجدان","دلتنگی","معرفت","حسادت","غرور","همدلی","تنهایی","آزادی","عدالت","احترام","اعتماد","صداقت","نابغه","شهود","الهام","تمرکز","اهمال‌کاری","وسواس","خوش‌شانسی","ادراک","حافظه","رویا","اعتمادبهنفس","عزت نفس","قوه تخیل","نظریه بازی‌ها"],
+"کلمات خنده‌دار":["سوسک حمام","جوراب سوراخ","بند کفش","ناخن پا","موش کور","جوجه کبک","فلاش تانک","توالت فرنگی","دستمال توالت","پشه‌کش","کله‌پاچه","فرق سر","ابروی هلالی","لپ‌تپل","غبغب","طناب لباس","بادکنک","پاپوش","کفش راحتی","دمپایی","خروپف","خمیازه","سکسکه","قهقهه","پوزخند","لالایی","تعارف فارسی","چای قندپهلو","نصف‌نهار","عصرانه","عینک دودی در شب","جوراب ناجور","پیژامه مهمانی","سبیل بستنی","کاسه داغ","پاچه‌خوکی","قلقلک","جیغ","آدم‌برفی","صندلی داغ","چرت‌وپرت","انداختن پته","لواشک ترش","ترشی هفت بیجار","لجبازی","قربون‌صدقه رفتن","چرت زدن","پچ‌پچ کردن","زیر لب حرف زدن","آواز حمام","جفتک","لباس فانتزی","شلوار گشاد بی‌کمربند"]
+};
+
+/* ============================================================
+   حالت ۱ — بازی تک‌گوشی (کاملاً آفلاین)
+   ============================================================ */
+const PASS={
+  players:[],teamsOn:false,forehead:true,tilt:true,timeSec:90,rounds:2,cats:[],
+  deck:[],dp:0,order:[],ti:0,cur:null,timer:null,endsAt:0,paused:false,pauseLeft:0,
+  scores:{},tScores:{a:0,b:0},lastT:0,cool:0,armed:true,motionBound:false,exitting:false
+};
+function passSaveSettings(){store('hbz_pass',{players:PASS.players,teamsOn:PASS.teamsOn,forehead:PASS.forehead,
+  tilt:PASS.tilt,timeSec:PASS.timeSec,rounds:PASS.rounds,cats:PASS.cats});}
+function passLoadSettings(){const s=store('hbz_pass');if(!s)return;
+  PASS.players=(s.players||[]).filter(p=>p&&p.name);PASS.teamsOn=!!s.teamsOn;PASS.forehead=s.forehead!==false;
+  PASS.tilt=s.tilt!==false;PASS.timeSec=s.timeSec||90;PASS.rounds=s.rounds||2;PASS.cats=s.cats||[];}
+function buildDeck(cats){const d=[];
+  cats.forEach(c=>{(WORDS[c]||[]).forEach(w=>d.push({w:w,c:c}));});
+  return shuffle(d);}
+function passRenderPlayers(){const box=$('ps-players');box.innerHTML='';
+  $('ps-count').textContent=faD(PASS.players.length)+' نفر';
+  if(!PASS.players.length){box.innerHTML='<div class="empty">هنوز بازیکنی اضافه نشده — حداقل ۲ نفر لازم است</div>';return;}
+  PASS.players.forEach(p=>{const r=document.createElement('div');r.className='prow';
+    r.innerHTML='<div class="avsm">'+p.av+'</div><div class="nm">'+esc(p.name)+'</div>'+
+      (PASS.teamsOn?'<div class="tb '+(p.team==='a'?'tb-a':'tb-b')+'">'+(p.team==='a'?'تیم آبی':'تیم قرمز')+'</div>':'')+
+      '<button class="del" aria-label="حذف">✕</button>';
+    r.querySelector('.del').onclick=ev=>{ev.stopPropagation();PASS.players=PASS.players.filter(x=>x.id!==p.id);
+      passSaveSettings();passRenderPlayers();Snd.tap();};
+    r.onclick=()=>{if(!PASS.teamsOn)return;p.team=p.team==='a'?'b':'a';passSaveSettings();passRenderPlayers();Snd.tap();};
+    box.appendChild(r);});}
+function passRenderCats(){const box=$('ps-cats');box.innerHTML='';
+  const sel=PASS.cats&&PASS.cats.length?PASS.cats:CATS.slice(0,6);
+  PASS.cats=sel.slice();
+  CATS.forEach(c=>{const b=document.createElement('button');
+    b.className='chip'+(sel.includes(c)?' on':'');b.dataset.cat=c;
+    b.innerHTML=c+'<span class="n">'+faD((WORDS[c]||[]).length)+'</span>';
+    b.onclick=()=>{b.classList.toggle('on');
+      PASS.cats=[...box.querySelectorAll('.chip.on')].map(x=>x.dataset.cat);
+      passSaveSettings();passCatsInfo();Snd.tap();};
+    box.appendChild(b);});
+  passCatsInfo();}
+function passCatsInfo(){const el1=$('ps-cats-info'),el2=$('mc-cats-info');
+  const txt=()=>{const n=PASS.cats.reduce((s,c)=>s+(WORDS[c]||[]).length,0);
+    return '('+faD(PASS.cats.length)+' دسته، '+faD(n)+' کلمه)';};
+  if(el1)el1.textContent=txt();if(el2)el2.textContent=txt();}
+function passOpenSetup(){show('scr-pass-setup');
+  $('ps-name').value='';
+  $('ps-teams').classList.toggle('on',PASS.teamsOn);
+  $('ps-forehead').classList.toggle('on',PASS.forehead);
+  $('ps-tilt').classList.toggle('on',PASS.tilt);
+  ['ps-time','ps-rounds'].forEach(id=>{const box=$(id);
+    box.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',parseInt(c.dataset.v,10)===(id==='ps-time'?PASS.timeSec:PASS.rounds)));});
+  passRenderPlayers();passRenderCats();}
+function passAddPlayer(){const inp=$('ps-name');const name=(inp.value||'').trim();
+  if(!name){toast('اسم را بنویس');return;}
+  if(PASS.players.length>=12){toast('حداکثر ۱۲ بازیکن');return;}
+  const used=PASS.players.map(p=>p.av);
+  const av=AVATARS.find(a=>!used.includes(a))||AVATARS[PASS.players.length%AVATARS.length];
+  PASS.players.push({id:uid(),name:name,av:av,team:PASS.teamsOn?(PASS.players.length%2?'b':'a'):'a'});
+  inp.value='';inp.focus();passSaveSettings();passRenderPlayers();passCatsInfo();Snd.pop();}
+function passStart(){
+  if(PASS.players.length<2){toast('حداقل ۲ بازیکن لازم است');return;}
+  if(!PASS.cats.length){toast('حداقل یک دسته را انتخاب کن');return;}
+  PASS.deck=buildDeck(PASS.cats);PASS.dp=0;PASS.ti=0;
+  PASS.scores={};PASS.tScores={a:0,b:0};
+  let flat=[];
+  if(PASS.teamsOn){
+    const a=PASS.players.filter(p=>p.team==='a'),b=PASS.players.filter(p=>p.team==='b');
+    const long=a.length>=b.length?a:b,short=a.length<b.length?a:b;
+    for(let r=0;r<PASS.rounds;r++){
+      const arr=r%2===0?[...long,...short]:[...short,...long];
+      arr.forEach(p=>flat.push(p));}
+  }else{
+    for(let r=0;r<PASS.rounds;r++)PASS.players.forEach(p=>flat.push(p));}
+  PASS.order=flat;passSaveSettings();passIntro();}
+function passIntro(){show('scr-pass-intro');passStopTimer();
+  const p=PASS.order[PASS.ti];
+  $('pi-round').textContent='نوبت '+faD(PASS.ti+1)+' از '+faD(PASS.order.length);
+  $('pi-av').textContent=p.av;$('pi-name').textContent=p.name;
+  $('pi-team').innerHTML=PASS.teamsOn?'<div class="tb '+(p.team==='a'?'tb-a':'tb-b')+'">'+(p.team==='a'?'تیم آبی':'تیم قرمز')+'</div>':'';
+  $('pi-desc').textContent=PASS.forehead?
+    'گوشی را روی پیشانی بگذار (صفحه رو به دوستانت)؛ آن‌ها کلمه را می‌بینند و توضیح می‌دهند، تو حدس بزن!'+(PASS.tilt?' برای «درست» گوشی را به سمت زمین بچرخان، برای «رد» به سمت آسمان.':' از دکمه‌های پایین استفاده کن.'):
+    'کلمه را به دوستانت نشان نده! خودت نمی‌توانی کلمه را ببینی؟ حالت پیشانی را از تنظیمات فعال کن. دوستان توضیح می‌دهند و تو حدس می‌زنی.';}
+function passWordStart(){
+  if(PASS.dp>=PASS.deck.length){PASS.deck=buildDeck(PASS.cats);PASS.dp=0;toast('ورق دوباره بُر خورد');}
+  const p=PASS.order[PASS.ti];
+  PASS.cur={player:p,words:[],correct:0,skip:0};
+  PASS.endsAt=Date.now()+PASS.timeSec*1000;PASS.paused=false;
+  show('scr-pass-word');
+  document.body.classList.toggle('forehead',PASS.forehead);
+  $('pw-hintline').textContent=PASS.tilt&&'ondevicemotion' in window?
+    'پیچ پایین = درست | پیچ بالا = رد':'از دکمه‌ها استفاده کن';
+  if(!('ondevicemotion' in window))$('pw-hintline').textContent='سنسور حرکت پشتیبانی نمی‌شود — از دکمه‌ها استفاده کن';
+  passBindMotion();
+  if(navigator.wakeLock&&navigator.wakeLock.request&&!document.hidden){
+    navigator.wakeLock.request('screen').catch(()=>{});}
+  passNextWord(false);
+  passTick(true);PASS.timer=setInterval(()=>passTick(false),200);}
+function passNextWord(fx){
+  if(PASS.dp>=PASS.deck.length){PASS.deck=buildDeck(PASS.cats);PASS.dp=0;toast('ورق دوباره بُر خورد');}
+  const w=PASS.deck[PASS.dp++];
+  $('pw-word').textContent=w.w;$('pw-cat').textContent=w.c;
+  const card=$('pw-card');card.classList.remove('pop');void card.offsetWidth;card.classList.add('pop');
+  if(fx!==false)Snd.pop();}
+function passTick(first){if(PASS.paused)return;
+  const remain=Math.max(0,(PASS.endsAt-Date.now())/1000);
+  const sec=Math.ceil(remain);
+  const numEl=$('pw-timer-num');numEl.textContent=faD(sec);
+  numEl.classList.toggle('hot',sec<=5&&sec>0);
+  $('pw-timer-bar').style.width=(remain/PASS.timeSec*100)+'%';
+  if(sec<=5&&sec>0&&sec!==PASS.lastT)Snd.tick();
+  PASS.lastT=sec;
+  if(!first&&remain<=0)passEndTurn('زمان تمام شد!');}
+function passRecord(ok){
+  if(!PASS.cur||PASS.paused)return;
+  const w={w:$('pw-word').textContent,c:$('pw-cat').textContent,ok:ok};
+  PASS.cur.words.push(w);
+  if(ok)PASS.cur.correct++;else PASS.cur.skip++;
+  const fl=$('pw-flash');fl.className=ok?'f-ok':'f-bad';void fl.offsetWidth;
+  fl.style.animation='none';void fl.offsetWidth;fl.style.animation='';
+  if(ok)Snd.correct();else Snd.skip();
+  passNextWord(true);}
+function passEndTurn(reason){passStopTimer();
+  document.body.classList.remove('forehead');
+  const c=PASS.cur;if(!c){passIntro();return;}
+  c.player._c=c.correct;
+  if(PASS.teamsOn)PASS.tScores[c.player.team]+=c.correct;else PASS.scores[c.player.id]=c.correct;
+  /* نمایش خلاصه */
+  show('scr-pass-sum');
+  $('psu-title').textContent='پایان نوبتِ '+c.player.name;
+  $('psu-sub').textContent=reason||'';
+  const box=$('psu-list');box.innerHTML='';
+  if(!c.words.length)box.innerHTML='<div class="empty">در این نوبت کلمه‌ای پخش نشد</div>';
+  c.words.forEach(w=>{const d=document.createElement('div');
+    d.className='wline '+(w.ok?'ok':'no');
+    d.innerHTML='<span>'+esc(w.w)+'</span><span class="st">'+(w.ok?'درست ✓':'رد ✗')+'</span>';
+    box.appendChild(d);});
+  passRenderScores($('psu-scores'));
+  Snd.timeup();}
+function passRenderScores(box){if(!box)return;box.innerHTML='';
+  if(PASS.teamsOn){
+    [['a','تیم آبی',PASS.tScores.a],['b','تیم قرمز',PASS.tScores.b]].forEach(t=>{
+      const d=document.createElement('div');d.className='scorerow'+(t[2]===Math.max(PASS.tScores.a,PASS.tScores.b)?' first':'');
+      d.innerHTML='<div class="rk">'+(t[0]==='a'?'🔵':'🔴')+'</div><div class="nm" style="flex:1;font-weight:800">'+t[1]+'</div><div class="sc">'+faD(t[2])+'</div>';
+      box.appendChild(d);});
+    return;}
+  const arr=[...PASS.players].sort((x,y)=>(PASS.scores[y.id]||0)-(PASS.scores[x.id]||0));
+  arr.forEach((p,i)=>{const d=document.createElement('div');
+    d.className='scorerow'+(i===0&&PASS.scores[p.id]>0?' first':'');
+    d.innerHTML='<div class="rk">'+faD(i+1)+'</div><div class="avsm">'+p.av+'</div>'+
+      '<div class="nm" style="flex:1;font-weight:800">'+esc(p.name)+'</div>'+
+      '<div class="sc">'+faD(PASS.scores[p.id]||0)+'</div>';
+    box.appendChild(d);});}
+function passNextTurn(){PASS.ti++;
+  if(PASS.ti>=PASS.order.length)passFinal();else passIntro();}
+function passFinal(){passStopTimer();show('scr-pass-final');
+  let title;
+  if(PASS.teamsOn){
+    if(PASS.tScores.a===PASS.tScores.b)title='مساوی شد!';
+    else title=(PASS.tScores.a>PASS.tScores.b?'تیم آبی':'تیم قرمز')+' برد! 🏆';
+  }else{
+    const arr=[...PASS.players].sort((x,y)=>(PASS.scores[y.id]||0)-(PASS.scores[x.id]||0));
+    title=(PASS.scores[arr[0].id]||0)>0?('برنده: '+arr[0].name+' 🏆'):'بازی تمام شد!';}
+  $('pf-title').textContent=title;
+  /* سکو */
+  const pod=$('pf-podium');pod.innerHTML='';
+  const medal=(p,i)=>'<div class="avsm">'+(p?p.av:'')+'</div><div class="pn">'+(p?esc(p.name):'—')+'</div><div class="ps">'+faD(p?(PASS.teamsOn?PASS.tScores[p.team]:(PASS.scores[p.id]||0)):0)+'</div>';
+  const mk=(cls,label,p)=>{const d=document.createElement('div');d.className='step '+cls;
+    d.innerHTML='<div style="font-size:20px">'+label+'</div>'+(p?medal(p):'<div style="padding:30px 0"></div>');pod.appendChild(d);};
+  if(PASS.teamsOn){
+    const s=[[PASS.tScores.a,'a'],[PASS.tScores.b,'b']].sort((x,y)=>y[0]-x[0]);
+    mk('s1','🥇',{av:(s[0][1]==='a'?'🔵':'🔴'),name:(s[0][1]==='a'?'تیم آبی':'تیم قرمز'),team:s[0][1]});
+    mk('s2','🥈',{av:(s[1][1]==='a'?'🔵':'🔴'),name:(s[1][1]==='a'?'تیم آبی':'تیم قرمز'),team:s[1][1]});
+  }else{
+    const arr=[...PASS.players].sort((x,y)=>(PASS.scores[y.id]||0)-(PASS.scores[x.id]||0));
+    mk('s1','🥇',arr[0]);mk('s2','🥈',arr[1]);mk('s3','🥉',arr[2]);}
+  const box=$('pf-list');box.innerHTML='';
+  if(PASS.teamsOn){
+    [['a','تیم آبی'],['b','تیم قرمز']].forEach(t=>{const d=document.createElement('div');d.className='scorerow';
+      d.innerHTML='<div class="rk">'+(t[0]==='a'?'🔵':'🔴')+'</div><div style="flex:1;font-weight:800">'+t[1]+'</div><div class="sc">'+faD(PASS.tScores[t[0]])+'</div>';
+      box.appendChild(d);});
+  }else{
+    const arr=[...PASS.players].sort((x,y)=>(PASS.scores[y.id]||0)-(PASS.scores[x.id]||0));
+    arr.forEach((p,i)=>{const d=document.createElement('div');
+      d.className='scorerow'+(i===0&&PASS.scores[p.id]>0?' first':'');
+      d.innerHTML='<div class="rk">'+faD(i+1)+'</div><div class="avsm">'+p.av+'</div>'+
+        '<div style="flex:1;font-weight:800">'+esc(p.name)+'</div><div class="sc">'+faD(PASS.scores[p.id]||0)+'</div>';
+      box.appendChild(d);});}
+  FX.burst();Snd.win();}
+function passStopTimer(){if(PASS.timer){clearInterval(PASS.timer);PASS.timer=null;}
+  PASS.paused=false;}
+function passQuit(){passStopTimer();document.body.classList.remove('forehead');
+  $('modal-pause').classList.remove('on');show('scr-home');}
+/* ---------- تکان گوشی (devicemotion) ---------- */
+function passBindMotion(){
+  if(PASS.motionBound)return;PASS.motionBound=true;
+  addEventListener('devicemotion',e=>{
+    if(!PASS.tilt||!$('scr-pass-word').classList.contains('on')||PASS.paused)return;
+    const g=e.accelerationIncludingGravity;if(!g)return;
+    const z=g.z||0;
+    const now=Date.now();
+    if(Math.abs(z)<4.5)PASS.armed=true;
+    if(!PASS.armed||now<PASS.cool)return;
+    if(z>6){PASS.armed=false;PASS.cool=now+1300;passRecord(false);}
+    else if(z<-6){PASS.armed=false;PASS.cool=now+1300;passRecord(true);}
+  },{passive:true});}
+function passMotionPerm(){return new Promise(res=>{
+  try{
+    if(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function'){
+      DeviceMotionEvent.requestPermission().then(s=>res(s==='granted')).catch(()=>res(false));
+    }else res('ondevicemotion' in window);
+  }catch(e){res(false);}});}
+
+/* ============================================================
+   کلاینت MQTT خام (MQTT 3.1.1 روی WebSocket — بدون کتابخانه)
+   ============================================================ */
+/*MQTT-CLASS-START*/
+class Mqtt{
+  constructor(url){this.url=url;this.ws=null;this.buf=new Uint8Array(0);this.pid=1;
+    this.onmsg=null;this.onclose=null;this.ka=null;this.closed=false;}
+  _varint(n){const o=[];do{let b=n%128;n=Math.floor(n/128);if(n>0)b|=128;o.push(b);}while(n>0);return o;}
+  _str(s){const b=new TextEncoder().encode(s);
+    const r=new Uint8Array(2+b.length);r[0]=b.length>>8;r[1]=b.length&255;r.set(b,2);return r;}
+  _cat(parts){let t=0;for(const p of parts)t+=p.length;
+    const r=new Uint8Array(t);let o=0;for(const p of parts){r.set(p,o);o+=p.length;}return r;}
+  connect(cid,will){return new Promise((res,rej)=>{
+    let settled=false;
+    const ws=new WebSocket(this.url,'mqtt');ws.binaryType='arraybuffer';this.ws=ws;
+    const to=setTimeout(()=>{if(!settled){settled=true;try{ws.close();}catch(e){}rej(new Error('timeout'));}},9000);
+    ws.onopen=()=>{
+      const flags=will?0x26:0x02; /* clean-session(+will) */
+      const vh=[this._str('MQTT'),new Uint8Array([4,flags,0,60])];
+      const pay=[this._str(cid)];
+      if(will)pay.push(this._str(will.topic),this._str(JSON.stringify(will.msg)));
+      const body=this._cat(vh.concat(pay));
+      this._send(this._cat([new Uint8Array([0x10]),new Uint8Array(this._varint(body.length)),body]));};
+    ws.onmessage=ev=>{const d=new Uint8Array(ev.data);
+      const nb=new Uint8Array(this.buf.length+d.length);nb.set(this.buf);nb.set(d,this.buf.length);this.buf=nb;this._drain();};
+    ws.onerror=()=>{if(!settled){settled=true;clearTimeout(to);rej(new Error('ws-error'));}};
+    ws.onclose=()=>{clearInterval(this.ka);clearTimeout(to);
+      if(!settled){settled=true;rej(new Error('closed'));}
+      else if(!this.closed&&this.onclose)this.onclose();};
+    this._res=(ok,err)=>{settled=true;clearTimeout(to);ok?res(this):err?rej(err):null;};
+  });}
+  _send(u8){if(this.ws&&this.ws.readyState===1){try{this.ws.send(u8);}catch(e){}}}
+  _drain(){const B=this.buf;let o=0;
+    while(o<B.length){
+      const h=B[o];let rl=0,mul=1,i=o+1,ok=false;
+      for(;i<B.length;i++){const b=B[i];rl+=(b&127)*mul;mul*=128;
+        if(!(b&128)){ok=true;i++;break;}}
+      if(!ok)break;
+      const end=i+rl;if(end>B.length)break;
+      this._pkt(h,B.slice(i,end));o=end;}
+    this.buf=o>0?B.slice(o):B;}
+  _pkt(h,b){const t=h>>4;
+    if(t===2){ /* CONNACK */
+      if(b.length>=2&&b[1]===0){if(this.ka)clearInterval(this.ka);
+        this.ka=setInterval(()=>this._send(new Uint8Array([0xC0,0])),40000);
+        this._res&&this._res(true);}
+      else this._res&&this._res(false,new Error('رفض اتصال بروکر (کد '+b[1]+')'));
+    }else if(t===3){ /* PUBLISH */
+      const tl=b[0]<<8|b[1];const topic=new TextDecoder().decode(b.slice(2,2+tl));
+      let o=2+tl;const qos=(h>>1)&3;let pid=0;
+      if(qos>0&&o+2<=b.length){pid=b[o]<<8|b[o+1];o+=2;
+        this._send(new Uint8Array([0x40,0x02,pid>>8,pid&255]));}
+      let payload='';try{payload=new TextDecoder().decode(b.slice(o));}catch(e){}
+      this.onmsg&&this.onmsg(topic,payload);
+    }/* SUBACK(9) PINGRESP(13) نادیده گرفته می‌شوند */
+  }
+  sub(topic){const pid=(this.pid++&0xFFFF)||1;
+    const body=this._cat([new Uint8Array([pid>>8,pid&255]),this._str(topic),new Uint8Array([0])]);
+    this._send(this._cat([new Uint8Array([0x82]),new Uint8Array(this._varint(body.length)),body]));}
+  pub(topic,obj){const p=new TextEncoder().encode(JSON.stringify(obj));
+    const body=this._cat([this._str(topic),p]);
+    this._send(this._cat([new Uint8Array([0x30]),new Uint8Array(this._varint(body.length)),body]));}
+  close(){this.closed=true;clearInterval(this.ka);try{this.ws&&this.ws.close();}catch(e){}}
+}
+/*MQTT-CLASS-END*/
+const BROKERS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt','wss://test.mosquitto.org:8081/mqtt'];
+async function mdConnect(will){
+  for(const url of BROKERS){
+    try{const m=new Mqtt(url);
+      const cid='hbz-'+Math.random().toString(36).slice(2,12);
+      await m.connect(cid,will);
+      return m;
+    }catch(e){/* بروکر بعدی */}}
+  throw new Error('هیچ‌کدام از سرورهای رایگان پیام‌رسانی در دسترس نیستند');}
+
+/* ============================================================
+   حالت ۲ — چندگوشی آنلاین (میزبانِ مرجع + پیام‌رسان MQTT)
+   ============================================================ */
+const MD={role:null,code:'',mqtt:null,me:null,
+  host:null,view:null,lastAct:0};
+
+function mdHome(){mdCleanup();show('scr-md-home');
+  const g=store('hbz_guest');$('md-resume-g').style.display=g&&g.code?'block':'none';
+  const h=store('hbz_host');$('md-resume-h').style.display=h&&h.code?'block':'none';}
+function mdCleanup(){if(MD.mqtt){MD.mqtt.onclose=null;MD.mqtt.close();MD.mqtt=null;}
+  mdClearTimers();MD.role=null;MD.view=null;}
+function mdClearTimers(){const h=MD.host;if(!h)return;
+  ['introTimer','turnTimer','tickTimer','summaryTimer'].forEach(k=>{if(h[k]){clearTimeout(h[k]);h[k]=null;}});}
+function tTopic(t){return 'hbz/'+MD.code+'/'+t;}
+function mdBcast(o){if(MD.mqtt)MD.mqtt.pub(tTopic('pub'),o);}
+function mdPriv(id,o){if(MD.mqtt)MD.mqtt.pub(tTopic('p/'+id),o);}
+
+/* ---------- میزبان ---------- */
+function mdSettingsSummary(s){return 'زمان هر نوبت: '+faD(s.timeSec)+' ثانیه | نوبت هر نفر: '+faD(s.rounds)+
+  ' | تیمی: '+(s.teamsOn?'بله':'خیر')+' | دسته‌ها: '+faD(s.cats.length);}
+function mdHostInit(me,settings){
+  MD.role='host';MD.me=me;MD.code=rndCode();
+  MD.host={players:new Map(),settings:settings,phase:'lobby',nonce:Math.random().toString(36).slice(2,12),
+    deck:[],dp:0,order:[],ti:0,cur:null,lastWordAct:0,
+    introTimer:null,turnTimer:null,tickTimer:null,summaryTimer:null};
+  mdHostAddPlayer(me.id,me.name,me.av,true,true);}
+function mdHostAddPlayer(id,name,av,isHost,connected){
+  const h=MD.host;const teamsOn=h.settings.teamsOn;
+  const team=isHost?'a':(h.players.size%2?'b':'a');
+  h.players.set(id,{id:id,name:name,av:av,host:!!isHost,ready:!!isHost,connected:connected!==false,
+    team:teamsOn?team:null,score:0,skips:0});}
+function mdHostSnapshot(){const h=MD.host;
+  const players=[...h.players.values()].map(p=>({id:p.id,name:p.name,av:p.av,host:p.host,
+    ready:p.ready,connected:p.connected,team:p.team,score:p.score,skips:p.skips}));
+  return {t:'state',phase:h.phase,players:players,settings:h.settings,hn:h.nonce};}
+function mdHostScoresSnapshot(){const h=MD.host;
+  return [...h.players.values()].map(p=>({id:p.id,name:p.name,av:p.av,team:p.team,
+    score:p.score,skips:p.skips})).sort((a,b)=>b.score-a.score);}
+function mdHostBcastState(){const s=mdHostSnapshot();mdBcast(s);
+  const v=mdGuestState();v.players=s.players;v.settings=s.settings;v.phase=s.phase;
+  mdHostSave();
+  if(s.phase==='lobby')mdRenderLobby();}
+function mdHostSave(){const h=MD.host;if(!h)return;
+  store('hbz_host',{code:MD.code,me:MD.me,settings:h.settings,ti:h.ti,
+    players:[...h.players.values()].map(p=>({id:p.id,name:p.name,av:p.av,host:p.host,team:p.team,score:p.score,skips:p.skips})),
+    savedAt:Date.now()});}
+async function mdHostCreate(){const name=($('mc-name').value||'').trim();
+  if(!name){toast('اسم را بنویس');return;}
+  const av=mdGetAv('mc-av');
+  const settings={timeSec:mdChipVal('mc-time',90),rounds:mdChipVal('mc-rounds',2),
+    teamsOn:$('mc-teams').classList.contains('on'),
+    cats:mdSelectedCats('mc-cats')};
+  if(!settings.cats.length){toast('حداقل یک دسته را انتخاب کن');return;}
+  $('mc-go').disabled=true;$('mc-status').textContent='در حال اتصال به سرور پیام‌رسانی...';
+  try{
+    mdHostInit({id:uid(),name:name,av:av},settings);
+    MD.mqtt=await mdConnect({topic:tTopic('pub'),msg:{t:'hostGone',nonce:MD.host.nonce}});
+    MD.mqtt.onclose=()=>{if(MD.role==='host')mdConnLost(true);};
+    MD.mqtt.onmsg=(topic,payload)=>mdHostOnMsg(topic,payload);
+    MD.mqtt.sub(tTopic('in'));MD.mqtt.sub(tTopic('p/'+MD.me.id));
+    store('hbz_me',{id:MD.me.id,name:MD.me.name,av:MD.me.av});
+    del('hbz_guest');mdHostSave();
+    mdRenderLobby();show('scr-md-lobby');mdHostBcastState();
+    toast('اتاق ساخته شد — کد: '+MD.code);
+  }catch(e){$('mc-go').disabled=false;$('mc-status').textContent='اتصال ناموفق: '+e.message;mdCleanup();}
+}
+function mdHostOnMsg(topic,payload){let m=null;try{m=JSON.parse(payload);}catch(e){return;}
+  const h=MD.host;if(!h)return;
+  if(topic===tTopic('in')){
+    if(m.t==='hello'&&m.from){mdHostHello(m);}
+    else if(m.t==='ready'&&m.from){const p=h.players.get(m.from);
+      if(p){p.ready=!!m.ready;mdHostBcastState();}}
+    else if(m.t==='bye'&&m.from){const p=h.players.get(m.from);
+      if(p&&(!p.nonce||p.nonce===m.nonce))mdHostRemove(m.from);}
+    else if((m.t==='correct'||m.t==='skip')&&m.from){mdHostWordAct(m.t,m.from);}
+    else if(m.t==='endTurn'&&m.from){if(h.phase==='word'&&h.cur&&m.from===h.cur.guesser)mdHostEndTurn(false,null);}
+  }
+}
+function mdHostHello(m){const h=MD.host;
+  const existing=h.players.get(m.from);
+  if(h.phase!=='lobby'&&!m.resume){
+    mdPriv(m.from,{t:'err',msg:'بازی در جریان است؛ دوباره وارد شو'});
+    return;}
+  if(existing){existing.name=m.name||existing.name;existing.av=m.av||existing.av;
+    existing.connected=true;existing.ready=true;if(m.nonce)existing.nonce=m.nonce;}
+  else if(h.players.size<12){mdHostAddPlayer(m.from,m.name||'بدون اسم',m.av||'🙂',false,true);
+    const np=h.players.get(m.from);if(np&&m.nonce)np.nonce=m.nonce;}
+  else{mdPriv(m.from,{t:'err',msg:'اتاق پر است (حداکثر ۱۲ نفر)'});return;}
+  Snd.join();
+  mdPriv(m.from,{t:'joined',code:MD.code});
+  mdHostBcastState();
+  if(h.phase==='word'&&m.from!==h.cur.guesser){
+    mdPriv(m.from,{t:'word',word:h.cur.word.w,cat:h.cur.word.c,ti:h.ti});}
+  else if(h.phase==='word'){
+    mdPriv(m.from,{t:'catchup',phase:'word',guesserId:h.cur.guesser,endsAt:h.cur.endsAt,ti:h.ti});}
+}
+function mdHostRemove(id){const h=MD.host;const p=h.players.get(id);if(!p)return;
+  h.players.delete(id);
+  if(h.phase==='word'&&h.cur&&h.cur.guesser===id){mdHostEndTurn(true,null);}
+  else mdHostBcastState();}
+function mdStartGame(){const h=MD.host;
+  if(h.players.size<2){toast('حداقل ۲ بازیکن لازم است');return;}
+  h.deck=buildDeck(h.settings.cats);h.dp=0;h.ti=0;
+  h.players.forEach(p=>{p.score=0;p.skips=0;});
+  let ids=[...h.players.keys()];
+  if(h.settings.teamsOn){
+    const a=ids.filter(i=>h.players.get(i).team==='a');
+    const b=ids.filter(i=>h.players.get(i).team==='b');
+    const long=a.length>=b.length?a:b,short=a.length<b.length?a:b;
+    const flat=[];
+    for(let r=0;r<h.settings.rounds;r++){
+      const arr=r%2===0?[...long,...short]:[...short,...long];
+      arr.forEach(i=>flat.push(i));}
+    h.order=flat;
+  }else{
+    const flat=[];for(let r=0;r<h.settings.rounds;r++)ids.forEach(i=>flat.push(i));
+    h.order=flat;}
+  mdHostBcastState();
+  mdHostTurnIntro();}
+function mdHostTurnIntro(){const h=MD.host;
+  mdClearTimers();h.phase='intro';
+  const gid=h.order[h.ti];const gp=h.players.get(gid);
+  if(!gp){mdHostNextTurn();return;}
+  h.cur={guesser:gid,words:[],correct:0,skip:0,word:null,endsAt:0};
+  h.cur.endsAt=Date.now()+4000;
+  mdBcast({t:'intro',g:{id:gid,name:gp.name,av:gp.av,team:gp.team},ti:h.ti,tt:h.order.length,endsAt:h.cur.endsAt});
+  mdHostBcastState();
+  show('scr-md-game');mdGuestViewIntro({g:{id:gid,name:gp.name,av:gp.av,team:gp.team},ti:h.ti,tt:h.order.length});
+  h.introTimer=setTimeout(()=>mdHostTurnWord(),4100);}
+function mdHostTurnWord(){const h=MD.host;
+  mdClearTimers();h.phase='word';
+  if(h.dp>=h.deck.length){h.deck=buildDeck(h.settings.cats);h.dp=0;}
+  const word=h.deck[h.dp++];h.cur.word=word;
+  h.cur.endsAt=Date.now()+h.settings.timeSec*1000;
+  h.players.forEach(p=>{if(p.id!==h.cur.guesser&&p.connected)
+    mdPriv(p.id,{t:'word',word:word.w,cat:word.c,ti:h.ti});});
+  mdBcast({t:'wordStart',guesserId:h.cur.guesser,endsAt:h.cur.endsAt,ti:h.ti});
+  mdHostBcastState();
+  mdHostViewOwn();
+  h.tickTimer=setInterval(()=>{
+    const remain=Math.max(0,(h.cur.endsAt-Date.now())/1000);
+    mdBcast({t:'tick',remain:remain});},1000);
+  h.turnTimer=setTimeout(()=>{if(h.phase==='word')mdHostEndTurn(true,null);},
+    h.settings.timeSec*1000+300);}
+function mdHostViewOwn(){const h=MD.host;
+  if(h.cur.guesser===MD.me.id){
+    mdGuestViewWord({guesserId:h.cur.guesser,endsAt:h.cur.endsAt,ti:h.ti},null);
+  }else{
+    mdGuestViewWord({guesserId:h.cur.guesser,endsAt:h.cur.endsAt,ti:h.ti},
+      {word:h.cur.word.w,cat:h.cur.word.c});}}
+function mdHostWordAct(kind,from){const h=MD.host;
+  if(h.phase!=='word'||!h.cur||from!==h.cur.guesser)return;
+  const now=Date.now();if(now-h.lastWordAct<350)return;h.lastWordAct=now;
+  if(h.cur.endsAt-now<400)return;
+  const gp=h.players.get(from);
+  h.cur.words.push({w:h.cur.word.w,c:h.cur.word.c,ok:kind==='correct'});
+  if(kind==='correct'){h.cur.correct++;gp.score++;}
+  else{h.cur.skip++;gp.skips++;}
+  mdBcast({t:'wordResult',ok:kind==='correct',by:gp.name,cat:h.cur.word.c,
+    scores:mdHostScoresSnapshot()});
+  Snd.tap();
+  /* کلمه بعدی در همین نوبت */
+  if(h.dp>=h.deck.length){h.deck=buildDeck(h.settings.cats);h.dp=0;}
+  const word=h.deck[h.dp++];h.cur.word=word;
+  h.players.forEach(p=>{if(p.id!==h.cur.guesser&&p.connected)
+    mdPriv(p.id,{t:'word',word:word.w,cat:word.c,ti:h.ti});});
+  mdHostViewOwn();}
+function mdHostEndTurn(timeup,fromId){const h=MD.host;
+  if(h.phase!=='word'||!h.cur)return;
+  mdClearTimers();h.phase='summary';
+  const gp=h.players.get(h.cur.guesser);
+  mdBcast({t:'turnEnd',words:h.cur.words,correct:h.cur.correct,skip:h.cur.skip,
+    guesser:{id:h.cur.guesser,name:gp?gp.name:'?',av:gp?gp.av:'🙂'},
+    scores:mdHostScoresSnapshot(),ti:h.ti,tt:h.order.length,timeup:!!timeup,
+    teamsOn:h.settings.teamsOn});
+  mdHostBcastState();
+  h.summaryTimer=setTimeout(()=>mdHostNextTurn(),6500);}
+function mdHostNextTurn(){const h=MD.host;
+  h.ti++;
+  if(h.ti>=h.order.length){mdHostGameEnd();return;}
+  mdHostTurnIntro();}
+function mdHostGameEnd(){const h=MD.host;
+  mdClearTimers();h.phase='end';
+  const ranking=mdHostScoresSnapshot();
+  const teams=h.settings.teamsOn?
+    {a:ranking.filter(r=>r.team==='a').reduce((s,r)=>s+r.score,0),
+     b:ranking.filter(r=>r.team==='b').reduce((s,r)=>s+r.score,0)}:null;
+  mdBcast({t:'gameEnd',ranking:ranking,teams:teams,teamsOn:h.settings.teamsOn});
+  del('hbz_host');
+  mdFinalView(ranking,teams,h.settings.teamsOn);mdHostBcastState();}
+function mdHostClose(){confirmBox('بستن اتاق','برای همه‌ی بازیکن‌ها بازی تمام می‌شود.',()=>{
+  mdBcast({t:'closed'});del('hbz_host');mdCleanup();show('scr-md-home');});}
+function mdConnLost(isHost){
+  if(isHost){toast('اتصال میزبان قطع شد');del('hbz_host');mdCleanup();show('scr-md-home');}
+  else{toast('اتصال قطع شد');mdCleanup();show('scr-md-home');}}
+
+/* ---------- مهمان ---------- */
+function mdGuestState(){if(!MD.view)MD.view={players:[],settings:null,phase:'lobby',
+  cur:{},myWord:null,ready:false};return MD.view;}
+async function mdJoin(code,name,av,resume){
+  MD.role='guest';MD.code=code;
+  MD.gn=Math.random().toString(36).slice(2,12);
+  MD.me={id:resume&&resume.id?resume.id:uid(),name:name,av:av};
+  MD.view=null;mdGuestState();
+  $('mj-status').textContent='در حال اتصال...';$('mj-go').disabled=true;
+  try{
+    MD.mqtt=await mdConnect({topic:tTopic('in'),msg:{t:'bye',from:MD.me.id,nonce:MD.gn}});
+    MD.mqtt.onclose=()=>{if(MD.role==='guest')mdConnLost(false);};
+    MD.mqtt.onmsg=(topic,payload)=>mdGuestOnMsg(topic,payload);
+    MD.mqtt.sub(tTopic('pub'));MD.mqtt.sub(tTopic('p/'+MD.me.id));
+    const joined=new Promise((res,rej)=>{MD._joinRes=res;
+      setTimeout(()=>rej(new Error('اتاقی با این کد پیدا نشد')),12000);});
+    MD.mqtt.pub(tTopic('in'),{t:'hello',from:MD.me.id,name:name,av:av,resume:!!resume,nonce:MD.gn});
+    await joined;
+    store('hbz_guest',{id:MD.me.id,name:name,av:av,code:code});
+    store('hbz_me',{id:MD.me.id,name:name,av:av});
+    del('hbz_host');
+    show('scr-md-lobby');mdRenderLobby();
+    $('mj-go').disabled=false;$('mj-status').textContent='';
+  }catch(e){$('mj-go').disabled=false;$('mj-status').textContent=e.message;mdCleanup();}
+}
+function mdGuestOnMsg(topic,payload){let m=null;try{m=JSON.parse(payload);}catch(e){return;}
+  const v=mdGuestState();
+  if(topic===tTopic('p/'+MD.me.id)){
+    if(m.t==='joined'){if(MD._joinRes){MD._joinRes();MD._joinRes=null;}}
+    else if(m.t==='err'){toast(m.msg);mdCleanup();show('scr-md-home');}
+    else if(m.t==='word'){v.myWord=m;if(v.phase==='word')mdRenderWord();}
+    else if(m.t==='catchup'){v.cur={guesserId:m.guesserId,endsAt:m.endsAt,ti:m.ti};
+      show('scr-md-game');mdGuestViewWord(v.cur,null);if(m.withWord)v.myWord=null;}
+  }
+  else if(topic===tTopic('pub')){
+    switch(m.t){
+      case 'state':v.players=m.players;v.settings=m.settings;v.phase=m.phase;v.hn=m.hn;
+        if(m.phase==='lobby'){mdRenderLobby();
+          if(!$('scr-md-lobby').classList.contains('on'))show('scr-md-lobby');}
+        break;
+      case 'intro':v.phase='intro';v.cur={guesser:m.g,ti:m.ti,tt:m.tt,endsAt:m.endsAt};
+        show('scr-md-game');mdGuestViewIntro(m);break;
+      case 'wordStart':v.phase='word';v.cur={guesserId:m.guesserId,endsAt:m.endsAt,ti:m.ti};
+        if(v.myWord&&v.myWord.ti!==m.ti)v.myWord=null;
+        show('scr-md-game');mdGuestViewWord(m,v.myWord);break;
+      case 'tick':if(v.phase==='word'&&v.cur)mdGuestTick(m.remain);break;
+      case 'wordResult':if(v.phase==='word'){v.lastResult=m;mdGuestFeed(m);}break;
+      case 'turnEnd':v.phase='summary';mdGuestSummary(m);break;
+      case 'gameEnd':v.phase='end';del('hbz_guest');
+        mdFinalView(m.ranking,m.teams,m.teamsOn);break;
+      case 'hostGone':if(v.hn&&m.hn===v.hn){toast('میزبان بازی را بست');del('hbz_guest');mdCleanup();show('scr-md-home');}break;
+      case 'closed':toast('میزبان اتاق را بست');del('hbz_guest');mdCleanup();show('scr-md-home');break;
+    }}
+}
+/* ---------- نمایش‌های مشترک مهمان/میزبان ---------- */
+function mdRenderLobby(){const v=mdGuestState();
+  $('ml-code').textContent=MD.code;
+  const box=$('ml-players');box.innerHTML='';
+  $('ml-count').textContent='('+faD(v.players.length)+' نفر)';
+  if(!v.players.length)box.innerHTML='<div class="empty">در انتظار بازیکن‌ها...</div>';
+  v.players.forEach(p=>{const r=document.createElement('div');r.className='prow';
+    r.innerHTML='<div class="avsm">'+p.av+'</div><div class="nm">'+esc(p.name)+
+      (p.connected===false?' (قطع)':'')+'</div>'+
+      (p.host?'<div class="crown">👑</div>':'')+
+      (v.settings&&v.settings.teamsOn&&p.team?'<div class="tb '+(p.team==='a'?'tb-a':'tb-b')+'">'+(p.team==='a'?'آبی':'قرمز')+'</div>':'')+
+      '<div class="tb" style="background:var(--bg2);color:var(--tx2)">'+(p.ready?'آماده ✓':'...')+'</div>';
+    box.appendChild(r);});
+  $('ml-settings').textContent=mdSettingsSummary(v.settings||{timeSec:90,rounds:2,teamsOn:false,cats:[]});
+  const meIsHost=MD.role==='host';
+  $('ml-ready').style.display=(!meIsHost&&v.phase==='lobby')?'block':'none';
+  $('ml-ready').textContent=v.myReady?'کنسل آمادگی':'آماده‌ام!';
+  $('ml-ready').classList.toggle('btn-p',!v.myReady);$('ml-ready').classList.toggle('btn-g',!!v.myReady);
+  $('ml-start').style.display=(meIsHost&&v.phase==='lobby')?'block':'none';
+  $('ml-close').style.display=meIsHost?'block':'none';
+  $('ml-start').disabled=!(meIsHost&&v.players.length>=2);
+  if(meIsHost){$('ml-start').textContent='شروع بازی'+(v.players.length<2?' (حداقل ۲ نفر)':'');}
+}
+function mdGuestViewIntro(m){$('mg-intro').style.display='flex';
+  $('mg-word-panel').style.display='none';$('mg-summary').style.display='none';
+  $('mg-intro-av').textContent=m.g.av;$('mg-intro-name').textContent=m.g.name;
+  $('mg-intro-sub').textContent='نوبت '+faD(m.ti+1)+' از '+faD(m.tt)+
+    (m.g.team?' — '+(m.g.team==='a'?'تیم آبی':'تیم قرمز'):'');
+  $('mg-phase-title').textContent='آماده‌سازی';
+  $('mg-hintcard').style.display='none';$('mg-guesser-btns').style.display='none';$('mg-btn-end').style.display='none';}
+function mdGuestViewWord(m,wordData){const v=mdGuestState();
+  $('mg-intro').style.display='none';$('mg-summary').style.display='none';
+  $('mg-word-panel').style.display='flex';
+  $('mg-phase-title').textContent='نوبت بازی';
+  v.phase='word';v.cur=m;v.myWord=wordData;
+  mdRenderWord();
+  mdGuestTick(Math.max(0,(m.endsAt-Date.now())/1000));}
+function mdRenderWord(){const v=mdGuestState();
+  const meGuess=v.cur&&v.cur.guesserId===MD.me.id;
+  const hint=$('mg-hintcard');
+  if(meGuess){
+    $('mg-hintline').textContent='تو حدس‌زننده هستی! کلمه فقط برای بقیه فرستاده شد.';
+    $('mg-cat').textContent='';$('mg-word').textContent='🤫';
+    $('mg-word').style.fontSize='48px';
+  }else{
+    $('mg-hintline').textContent='کلمه را برای حدس‌زننده توضیح بده (بدون گفتن خود کلمه!)';
+    $('mg-cat').textContent=v.myWord?('دسته: '+v.myWord.cat):'';
+    $('mg-word').textContent=v.myWord?v.myWord.word:'در انتظار کلمه...';
+    $('mg-word').style.fontSize='';}
+  hint.style.display='flex';
+  $('mg-guesser-btns').style.display=meGuess?'flex':'none';
+  $('mg-btn-end').style.display=meGuess?'block':'none';
+  $('mg-feed').textContent=v.lastResult?(v.lastResult.by+(v.lastResult.ok?' حدس درست زد ✓':' رد کرد ✗')):'';}
+function mdGuestTick(remain){const v=mdGuestState();
+  const timeSec=(v.settings&&v.settings.timeSec)||90;
+  const sec=Math.ceil(remain);
+  const num=$('mg-timer-num');num.textContent=faD(sec);
+  num.classList.toggle('hot',sec<=5&&sec>0);
+  $('mg-timer-bar').style.width=Math.max(0,Math.min(100,remain/timeSec*100))+'%';}
+function mdGuestFeed(m){$('mg-feed').textContent=m.by+(m.ok?' حدس درست زد ✓':' رد کرد ✗');
+  if(m.ok)Snd.correct();else Snd.skip();}
+function mdGuestSummary(m){$('mg-intro').style.display='none';
+  $('mg-word-panel').style.display='none';$('mg-summary').style.display='flex';
+  $('mg-phase-title').textContent='نتیجه نوبت';
+  $('mg-sum-title').textContent='نوبتِ '+m.guesser.name+(m.timeup?' — زمان تمام شد':'');
+  const box=$('mg-sum-list');box.innerHTML='';
+  if(!m.words.length)box.innerHTML='<div class="empty">کلمه‌ای پخش نشد</div>';
+  m.words.forEach(w=>{const d=document.createElement('div');
+    d.className='wline '+(w.ok?'ok':'no');
+    d.innerHTML='<span>'+esc(w.w)+'</span><span class="st">'+(w.ok?'درست ✓':'رد ✗')+'</span>';
+    box.appendChild(d);});
+  mdRenderScoreList($('mg-scores'),m.scores,m.teamsOn);
+  if(m.guesser.id===MD.me.id)FX.burst(60);}
+function mdRenderScoreList(box,scores,teamsOn){if(!box)return;box.innerHTML='';
+  if(teamsOn){const a=scores.filter(s=>s.team==='a').reduce((x,s)=>x+s.score,0);
+    const b=scores.filter(s=>s.team==='b').reduce((x,s)=>x+s.score,0);
+    [['a','تیم آبی',a],['b','تیم قرمز',b]].forEach(t=>{const d=document.createElement('div');
+      d.className='scorerow'+(t[2]===Math.max(a,b)?' first':'');
+      d.innerHTML='<div class="rk">'+(t[0]==='a'?'🔵':'🔴')+'</div><div style="flex:1;font-weight:800">'+t[1]+'</div><div class="sc">'+faD(t[2])+'</div>';
+      box.appendChild(d);});
+    return;}
+  (scores||[]).forEach((p,i)=>{const d=document.createElement('div');
+    d.className='scorerow'+(i===0&&p.score>0?' first':'');
+    d.innerHTML='<div class="rk">'+faD(i+1)+'</div><div class="avsm">'+p.av+'</div>'+
+      '<div style="flex:1;font-weight:800">'+esc(p.name)+'</div>'+
+      (p.team?'<div class="tb '+(p.team==='a'?'tb-a':'tb-b')+'">'+(p.team==='a'?'آبی':'قرمز')+'</div>':'')+
+      '<div class="sc">'+faD(p.score)+'</div>';
+    box.appendChild(d);});}
+function mdFinalView(ranking,teams,teamsOn){show('scr-md-final');
+  let title='بازی تمام شد!';
+  if(teamsOn&&teams){if(teams.a===teams.b)title='مساوی شد!';
+    else title=(teams.a>teams.b?'تیم آبی':'تیم قرمز')+' برد! 🏆';}
+  else if(ranking.length)title=(ranking[0].score>0?'برنده: '+ranking[0].name:'بازی تمام شد!')+' 🏆';
+  $('mf-title').textContent=title;
+  const pod=$('mf-podium');pod.innerHTML='';
+  const mk=(cls,label,p)=>{const d=document.createElement('div');d.className='step '+cls;
+    d.innerHTML='<div style="font-size:20px">'+label+'</div>'+
+      (p?'<div class="avsm">'+p.av+'</div><div class="pn">'+esc(p.name)+'</div><div class="ps">'+faD(p.score)+'</div>'
+        :'<div style="padding:30px 0"></div>');
+    pod.appendChild(d);};
+  mk('s1','🥇',ranking[0]);mk('s2','🥈',ranking[1]);mk('s3','🥉',ranking[2]);
+  mdRenderScoreList($('mf-list'),ranking,teamsOn);
+  FX.burst();Snd.win();}
+/* ---------- UI کمکی چندگوشی ---------- */
+function mdGetAv(boxId){const el=$(boxId).querySelector('.av.on');
+  if(!el)return AVATARS[0];return el.textContent;}
+function mdChipVal(id,def){const el=$(id).querySelector('.chip.on');
+  return el?parseInt(el.dataset.v,10):def;}
+function mdSelectedCats(boxId){return [...$(boxId).querySelectorAll('.chip.on')]
+  .map(x=>x.dataset.cat).filter(Boolean);}
+function mdRenderCats(boxId,sel){sel=sel&&sel.length?sel:CATS.slice(0,6);
+  const box=$(boxId);box.innerHTML='';
+  CATS.forEach(c=>{const b=document.createElement('button');
+    b.className='chip'+(sel.includes(c)?' on':'');b.dataset.cat=c;
+    b.innerHTML=c+'<span class="n">'+faD((WORDS[c]||[]).length)+'</span>';
+    b.onclick=()=>{b.classList.toggle('on');Snd.tap();updateInfo();};
+    box.appendChild(b);});
+  const updateInfo=()=>{const n=mdSelectedCats(boxId).reduce((s,c)=>s+(WORDS[c]||[]).length,0);
+    const info=$(boxId==='mc-cats'?'mc-cats-info':'mj-cats-info');
+    if(info)info.textContent='('+faD(mdSelectedCats(boxId).length)+' دسته، '+faD(n)+' کلمه)';};
+  updateInfo();}
+function mdShare(){const url=location.origin+location.pathname+'?join='+MD.code;
+  const text='حدس بزن! اتاق '+MD.code+' — '+url;
+  if(navigator.share){navigator.share({title:'حدس بزن!',text:text}).catch(()=>{});}
+  else{navigator.clipboard&&navigator.clipboard.writeText(url).then(()=>toast('لینک کپی شد')).catch(()=>toast(url));}}
+function mdGuestReady(){const v=mdGuestState();v.myReady=!v.myReady;
+  MD.mqtt.pub(tTopic('in'),{t:'ready',from:MD.me.id,ready:v.myReady});
+  mdRenderLobby();Snd.tap();}
+function mdGuestAct(kind){const now=Date.now();if(now-MD.lastAct<500)return;MD.lastAct=now;
+  MD.mqtt.pub(tTopic('in'),{t:kind,from:MD.me.id});}
+function mdGuestLeave(){confirmBox('خروج از اتاق','واقعاً می‌خواهی اتاق را ترک کنی؟',()=>{
+  try{MD.mqtt&&MD.mqtt.pub(tTopic('in'),{t:'bye',from:MD.me.id,nonce:MD.gn});}catch(e){}
+  del('hbz_guest');mdCleanup();show('scr-md-home');});}
+
+/* ============================================================
+   رویدادها و شروع
+   ============================================================ */
+function bindAll(){
+  /* عمومی */
+  on($('btn-theme'),'click',()=>{setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');Snd.tap();});
+  on($('btn-sound'),'click',()=>{setSnd(!Snd.on);if(Snd.on)Snd.tap();});
+  on($('btn-help'),'click',()=>{$('modal-help').classList.add('on');});
+  on($('help-close'),'click',()=>$('modal-help').classList.remove('on'));
+  $$('[data-back]').forEach(b=>on(b,'click',()=>{Snd.tap();show(b.dataset.back);}));
+  /* خانه */
+  on($('btn-pass'),'click',()=>{Snd.tap();passOpenSetup();});
+  on($('btn-md'),'click',()=>{Snd.tap();mdHome();});
+  /* تک‌گوشی */
+  on($('ps-add'),'click',passAddPlayer);
+  on($('ps-name'),'keydown',e=>{if(e.key==='Enter')passAddPlayer();});
+  on($('ps-teams'),'click',()=>{PASS.teamsOn=!PASS.teamsOn;
+    $('ps-teams').classList.toggle('on',PASS.teamsOn);
+    if(PASS.teamsOn)PASS.players.forEach((p,i)=>p.team=i%2?'b':'a');
+    passSaveSettings();passRenderPlayers();Snd.tap();});
+  on($('ps-forehead'),'click',()=>{PASS.forehead=!PASS.forehead;
+    $('ps-forehead').classList.toggle('on',PASS.forehead);passSaveSettings();Snd.tap();});
+  on($('ps-tilt'),'click',()=>{PASS.tilt=!PASS.tilt;
+    $('ps-tilt').classList.toggle('on',PASS.tilt);passSaveSettings();Snd.tap();});
+  on($('ps-start'),'click',passStart);
+  on($('pi-start'),'click',async()=>{Snd.tap();
+    if(PASS.tilt){const ok=await passMotionPerm();
+      if(ok===false)toast('سنسور در دسترس نیست — از دکمه‌ها استفاده کن');}
+    passWordStart();});
+  on($('pw-btn-ok'),'click',()=>passRecord(true));
+  on($('pw-btn-skip'),'click',()=>passRecord(false));
+  on($('pw-btn-end'),'click',()=>passEndTurn('نوبت را تمام کردی'));
+  on($('pw-pause'),'click',()=>{if(PASS.paused)return;
+    PASS.pauseLeft=PASS.endsAt-Date.now();PASS.paused=true;
+    $('modal-pause').classList.add('on');});
+  on($('mp-resume'),'click',()=>{PASS.endsAt=Date.now()+PASS.pauseLeft;PASS.paused=false;
+    $('modal-pause').classList.remove('on');});
+  on($('mp-quit'),'click',()=>confirmBox('پایان بازی','نوبت‌ها تمام می‌شود و به نتایج می‌رویم.',()=>{
+    $('modal-pause').classList.remove('on');PASS.paused=false;passFinal();}));
+  on($('psu-next'),'click',()=>{Snd.tap();passNextTurn();});
+  on($('pf-again'),'click',()=>{Snd.tap();passStart();});
+  on($('pf-home'),'click',passQuit);
+  /* چندگوشی */
+  on($('md-create'),'click',()=>{Snd.tap();
+    $('mc-name').value=(store('hbz_me')||{}).name||'';
+    mdRenderAv('mc-av');mdRenderCats('mc-cats');show('scr-md-create');
+    $('mc-status').textContent='';});
+  on($('md-join'),'click',()=>{Snd.tap();
+    const me=store('hbz_me')||{};
+    $('mj-name').value=me.name||'';
+    mdRenderAv('mj-av',me.av);
+    const j=store('hbz_guest');if(j&&j.code)fillCode(j.code);
+    show('scr-md-join');$('mj-status').textContent='';});
+  on($('md-resume-g'),'click',()=>{const g=store('hbz_guest');if(!g)return;
+    mdJoin(g.code,g.name,g.av,{id:g.id});});
+  on($('md-resume-h'),'click',()=>{mdHostResume();});
+  on($('mc-teams'),'click',()=>{$('mc-teams').classList.toggle('on');Snd.tap();});
+  on($('mc-go'),'click',mdHostCreate);
+  on($('mj-go'),'click',()=>{const code=readCode();
+    if(code.length!==6){toast('کد ۶ رقمی را کامل وارد کن');return;}
+    const name=($('mj-name').value||'').trim();
+    if(!name){toast('اسم را بنویس');return;}
+    const av=mdGetAv('mj-av');
+    mdJoin(code,name,av,null);});
+  on($('ml-back'),'click',()=>{if(MD.role==='host')mdHostClose();else mdGuestLeave();});
+  on($('ml-copy'),'click',()=>{navigator.clipboard&&navigator.clipboard.writeText(MD.code)
+    .then(()=>toast('کد کپی شد')).catch(()=>{});});
+  on($('ml-share'),'click',mdShare);
+  on($('ml-ready'),'click',mdGuestReady);
+  on($('ml-start'),'click',()=>{if(MD.role==='host')mdStartGame();});
+  on($('ml-close'),'click',()=>{if(MD.role==='host')mdHostClose();else mdGuestLeave();});
+  on($('mg-btn-ok'),'click',()=>mdGuestAct('correct'));
+  on($('mg-btn-skip'),'click',()=>mdGuestAct('skip'));
+  on($('mg-btn-end'),'click',()=>mdGuestAct('endTurn'));
+  on($('mg-exit'),'click',()=>{if(MD.role==='host')mdHostClose();else mdGuestLeave();});
+  on($('mf-home'),'click',()=>{mdCleanup();show('scr-md-home');});
+  /* کد ورود */
+  const cds=[...$('mj-code').querySelectorAll('.cd')];
+  cds.forEach((inp,i)=>{
+    on(inp,'input',()=>{inp.value=inp.value.replace(/[^\d۰-۹]/g,'').replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).slice(-1);
+      if(inp.value&&i<5)cds[i+1].focus();});
+    on(inp,'keydown',e=>{if(e.key==='Backspace'&&!inp.value&&i>0)cds[i-1].focus();});
+    on(inp,'paste',e=>{e.preventDefault();
+      const t=(e.clipboardData||window.clipboardData).getData('text')||'';
+      fillCode(t.replace(/\D/g,''));});});
+}
+function fillCode(code){const cds=[...$('mj-code').querySelectorAll('.cd')];
+  code=code.replace(/\D/g,'').slice(0,6);
+  cds.forEach((inp,i)=>inp.value=code[i]||'');
+  if(code.length===6)cds[5].focus();}
+function readCode(){return [...$('mj-code').querySelectorAll('.cd')].map(i=>i.value).join('');}
+function mdRenderAv(boxId,selected){const box=$(boxId);box.innerHTML='';
+  AVATARS.forEach(a=>{const b=document.createElement('button');
+    b.className='av'+(a===(selected||AVATARS[0])?' on':'');b.textContent=a;
+    b.onclick=()=>{box.querySelectorAll('.av').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');Snd.tap();};
+    box.appendChild(b);});}
+async function mdHostResume(){const s=store('hbz_host');if(!s)return;
+  $('md-resume-h').textContent='در حال اتصال...';
+  try{
+    MD.role='host';MD.me=s.me;MD.code=s.code;
+    MD.host={players:new Map(),settings:s.settings,phase:'lobby',nonce:Math.random().toString(36).slice(2,12),
+      deck:buildDeck(s.settings.cats),dp:0,order:[],ti:s.ti||0,cur:null,lastWordAct:0,
+      introTimer:null,turnTimer:null,tickTimer:null,summaryTimer:null};
+    (s.players||[]).forEach(p=>{p.connected=(p.id===s.me.id);
+      p.ready=(p.id===s.me.id);MD.host.players.set(p.id,p);});
+    MD.mqtt=await mdConnect({topic:tTopic('pub'),msg:{t:'hostGone',nonce:MD.host.nonce}});
+    MD.mqtt.onclose=()=>{if(MD.role==='host')mdConnLost(true);};
+    MD.mqtt.onmsg=(topic,payload)=>mdHostOnMsg(topic,payload);
+    MD.mqtt.sub(tTopic('in'));MD.mqtt.sub(tTopic('p/'+MD.me.id));
+    mdHostSave();mdRenderLobby();show('scr-md-lobby');mdHostBcastState();
+    toast('میزبانی ادامه یافت — امتیازها محفوظ است');
+  }catch(e){toast('اتصال ناموفق: '+e.message);}
+  $('md-resume-h').textContent='ادامه میزبانی قبلی';}
+function init(){
+  FX.init();
+  setTheme(store('hbz_theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+  Snd.on=store('hbz_snd');if(Snd.on===null||Snd.on===undefined)Snd.on=true;
+  $('ic-sound').textContent=Snd.on?'🔊':'🔇';
+  passLoadSettings();
+  bindAll();
+  document.body.addEventListener('pointerdown',()=>Snd.ac(),{once:true});
+  /* لینک مستقیم ورود ?join=123456 */
+  const jp=new URLSearchParams(location.search).get('join');
+  if(jp){show('scr-md-join');mdRenderAv('mj-av',(store('hbz_me')||{}).av);
+    fillCode(jp);$('mj-name').value=(store('hbz_me')||{}).name||'';}
+  window.__DBG={show:show,PASS:PASS,MD:MD,WORDS:WORDS,passRecord:passRecord,passStart:passStart,
+    passOpenSetup:passOpenSetup,passWordStart:passWordStart,passEndTurn:passEndTurn,passFinal:passFinal,
+    mdFinalView:mdFinalView,mdRenderWord:mdRenderWord};
+}
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>
